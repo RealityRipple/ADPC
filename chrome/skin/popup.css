@@ -1,0 +1,4 @@
+.popup-notification-icon[popupid="adpc"]
+{
+ list-style-image: url("chrome://adpc/skin/logo64.png");
+}

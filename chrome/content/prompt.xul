@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://adpc/skin/prompt.css" type="text/css"?>
+<!DOCTYPE dialog[
+ <!ENTITY % adpcPromptDTD SYSTEM "chrome://adpc/locale/prompt.dtd" >
+ %adpcPromptDTD;
+ <!ENTITY % dialogDTD SYSTEM "chrome://global/locale/dialogOverlay.dtd" >
+ %dialogDTD;
+]>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="adpc_prompt.init();">
+ <keyset>
+  <key id="close_cmd" keycode="VK_ESCAPE" oncommand="window.close();"/>
+ </keyset>
+ <script type="application/x-javascript" src="chrome://adpc/content/prompt.js"/>
+ <groupbox flex="1">
+  <caption id="lblTitle" label="&permission.title;" />
+  <vbox flex="1" id="lstScroll">
+   <vbox id="lstRequest" />
+  </vbox>
+ </groupbox>
+ <label id="lblStandard" value="&standard.label;" />
+ <hbox>
+  <spacer flex="1" />
+  <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_prompt.save(); window.close();" />
+  <button id="cmdCancel" class="dialog-button" icon="cancel" label="&cancelButton.label;" oncommand="window.close();" />
+ </hbox>
+</window>

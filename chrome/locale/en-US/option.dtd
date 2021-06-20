@@ -1,0 +1,6 @@
+<!ENTITY dialog.title "ADPC Preferences">
+<!ENTITY all.label "Always respond with:">
+<!ENTITY all.none "Unset">
+<!ENTITY all.allow "Accept">
+<!ENTITY all.block "Reject">
+<!ENTITY clearButton.label "Clear Choices">

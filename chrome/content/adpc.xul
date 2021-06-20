@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://adpc/skin/popup.css" type="text/css"?>
+<overlay id="adpc_overlay" xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ <script type="application/x-javascript" src="chrome://adpc/content/adpc.js"></script>
+</overlay>

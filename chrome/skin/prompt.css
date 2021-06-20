@@ -1,0 +1,9 @@
+#lstScroll
+{
+ overflow-y: auto;
+}
+window
+{
+ max-width: 40em;
+ max-height: 25em;
+}

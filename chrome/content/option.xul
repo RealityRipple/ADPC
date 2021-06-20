@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<!DOCTYPE dialog[
+ <!ENTITY % adpcOptionDTD SYSTEM "chrome://adpc/locale/option.dtd" >
+ %adpcOptionDTD;
+ <!ENTITY % adpcPromptDTD SYSTEM "chrome://adpc/locale/prompt.dtd" >
+ %adpcPromptDTD;
+ <!ENTITY % dialogDTD SYSTEM "chrome://global/locale/dialogOverlay.dtd" >
+ %dialogDTD;
+]>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="adpc_option.init();">
+ <keyset>
+  <key id="close_cmd" keycode="VK_ESCAPE" oncommand="window.close();"/>
+ </keyset>
+ <script type="application/x-javascript" src="chrome://adpc/content/option.js"/>
+ <vbox flex="1">
+  <hbox flex="1">
+   <label control="cmbAll" value="&all.label;" />
+   <spacer flex="1" />
+   <menulist id="cmbAll">
+    <menupopup>
+     <menuitem label="&all.none;" value="0"/>
+     <menuitem label="&all.allow;" value="1"/>
+     <menuitem label="&all.block;" value="-1"/>
+    </menupopup>
+   </menulist>
+  </hbox>
+ </vbox>
+ <hbox>
+  <button id="cmdClear"  class="dialog-button" label="&clearButton.label;" oncommand="adpc_option.clear();" />
+  <spacer flex="1" />
+  <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_option.save(); window.close();" />
+  <button id="cmdCancel" class="dialog-button" icon="cancel" label="&cancelButton.label;" oncommand="window.close();" />
+ </hbox>
+</window>

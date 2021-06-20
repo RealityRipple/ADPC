@@ -1,0 +1,24 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+ <Description about="urn:mozilla:install-manifest">
+  <em:name>ADPC</em:name>
+  <em:id>{3D1F80B5-DA79-586E-8A89-603451EF31AD}</em:id>
+  <em:version>1.0</em:version>
+  <em:type>2</em:type>
+  <!-- Pale Moon -->
+  <em:targetApplication>
+   <Description>
+    <em:id>{8de7fcbb-c55c-4fbe-bfc5-fc555c87dbc4}</em:id>
+    <em:minVersion>29.0a1pre</em:minVersion>
+    <em:maxVersion>29.*</em:maxVersion>
+   </Description>
+  </em:targetApplication>
+  <em:description>Add support for Advanced Data Protection Control.</em:description>
+  <em:homepageURL>https://realityripple.com/Software/Mozilla-Extensions/ADPC/</em:homepageURL>
+  <em:updateURL>https://realityripple.com/Software/Mozilla-Extensions/ADPC/update.rdf</em:updateURL>
+  <em:iconURL>chrome://adpc/skin/logo.png</em:iconURL>
+  <em:icon64URL>chrome://adpc/skin/logo64.png</em:icon64URL>
+  <em:optionsURL>chrome://adpc/content/option.xul</em:optionsURL>
+  <em:creator>RealityRipple</em:creator>
+ </Description>
+</RDF>
