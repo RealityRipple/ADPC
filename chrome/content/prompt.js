@@ -56,7 +56,7 @@ var adpc_prompt =
    lLater.setAttribute('label', sLater);
    lLater.setAttribute('accesskey', kLater);
    lLater.setAttribute('value', 'later');
-   if (retVals[i].value === null || retVals[i].value === -1)
+   if (retVals[i].value === -1)
     lLater.setAttribute('selected', 'true');
    lGrp.appendChild(lLater);
    lAct.appendChild(lGrp);
