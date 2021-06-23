@@ -278,9 +278,12 @@ var adpc_api =
    let updated = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
    if (!updated)
     return false;
-   let hostupdated = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbURLList + ' SET text = ?1 WHERE id = ?2', [label, idx]);
-   if (!hostupdated)
-    return false;
+   if (label !== null)
+   {
+    let hostupdated = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbURLList + ' SET text = ?1 WHERE id = ?2', [label, idx]);
+    if (!hostupdated)
+     return false;
+   }
    return idx;
   }
   idx = await adpc_api.makeConsentID();
