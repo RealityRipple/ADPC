@@ -24,7 +24,7 @@ var adpc_api =
   if(!fFrom.exists())
    return false;
   if (adpc_api._db[dbID] === null)
-   adpc_api._db[dbID] = Components.classes["@mozilla.org/storage/service;1"].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
+   adpc_api._db[dbID] = Components.classes['@mozilla.org/storage/service;1'].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
   let p = new Promise((resolve, reject) => {
    let ret = [];
    let statement = adpc_api._db[dbID].createAsyncStatement(q);
@@ -72,7 +72,7 @@ var adpc_api =
   if(!fFrom.exists())
    return false;
   if (adpc_api._db[dbID] === null)
-   adpc_api._db[dbID] = Components.classes["@mozilla.org/storage/service;1"].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
+   adpc_api._db[dbID] = Components.classes['@mozilla.org/storage/service;1'].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
   let ret = [];
   let statement = adpc_api._db[dbID].createStatement(q);
   for (param in params)
@@ -100,7 +100,7 @@ var adpc_api =
   fFrom.appendRelativePath(adpc_api._dbName);
   let create = !fFrom.exists();
   if (adpc_api._db[dbID] === null)
-   adpc_api._db[dbID] = Components.classes["@mozilla.org/storage/service;1"].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
+   adpc_api._db[dbID] = Components.classes['@mozilla.org/storage/service;1'].getService(Components.interfaces.mozIStorageService).openDatabase(fFrom);
   if (create || !adpc_api._db[dbID].tableExists(dbID))
   {
    let struct = adpc_api._dbStruct[dbID];
