@@ -120,15 +120,7 @@ var adpc_control =
     return;
    for (let i = 0; i < sList.length; i++)
    {
-    if (sList[i].hreflang.toLowerCase() === navigator.language.toLowerCase())
-    {
-     adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
-     return;
-    }
-   }
-   for (let i = 0; i < sList.length; i++)
-   {
-    if (sList[i].hreflang.slice(0, 2).toLowerCase() === navigator.language.slice(0, 2).toLowerCase())
+    if (navigator.languages.includes(sList[i].hreflang))
     {
      adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
      return;
