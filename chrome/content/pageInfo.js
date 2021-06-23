@@ -53,7 +53,6 @@ var adpc_pageInfo =
   let chk = document.createElementNS(XUL_NS, 'checkbox');
   chk.setAttribute('id', 'ADPC_' + id + 'Def');
   chk.setAttribute('command', 'cmd_ADPC_' + id + 'Def');
-  console.log(document.getElementById('cookieDef').label);
   chk.setAttribute('label', document.getElementById('cookieDef').label);
   chk.setAttribute('oncommand', 'adpc_pageInfo.onCheckboxClick(\'' + id + '\');');
   if (val === -1)
