@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!-- <?xml-stylesheet href="chrome://adpc/skin/pageInfo.css" type="text/css"?> -->
+<overlay id="pageInfoADPCOverlay"  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ <script type="application/x-javascript" src="chrome://adpc/content/api.js"/>
+ <script type="application/x-javascript" src="chrome://adpc/content/pageInfo.js"/>
+ <script>adpc_pageInfo.init();</script>
+</overlay>
