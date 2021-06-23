@@ -1,5 +1,5 @@
 <!ENTITY dialog.title "ADPC Preferences">
-<!ENTITY all.label "Always respond with:">
+<!ENTITY all.label "Default response:">
 <!ENTITY all.none "Unset">
 <!ENTITY all.allow "Accept">
 <!ENTITY all.block "Reject">
