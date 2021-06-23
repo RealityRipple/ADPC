@@ -13,6 +13,7 @@
  <keyset>
   <key id="close_cmd" keycode="VK_ESCAPE" oncommand="window.close();"/>
  </keyset>
+ <script type="application/x-javascript" src="chrome://adpc/content/api.js"/>
  <script type="application/x-javascript" src="chrome://adpc/content/prompt.js"/>
  <groupbox flex="1">
   <caption id="lblTitle" label="&permission.title;" />

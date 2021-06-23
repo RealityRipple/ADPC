@@ -18,7 +18,7 @@ var adpc_prompt =
   let hasStd = false;
   for (let i = 0; i < retVals.length; i++)
   {
-   let std = adpc_prompt.isStandardID(retVals[i].id);
+   let std = adpc_api.isStandardID(retVals[i].id);
    if (std)
     hasStd = true;
    let lNew = document.createElementNS(XUL_NS, 'vbox');
@@ -72,14 +72,6 @@ var adpc_prompt =
   let lblStd = document.getElementById('lblStandard');
   if (!hasStd)
    lblStd.style.display = 'none';
- },
- isStandardID: function(id)
- {
-  if (id.slice(0, 7) === 'http://')
-   return true;
-  if (id.slice(0, 8) === 'https://')
-   return true;
-  return false;
  },
  save: function()
  {

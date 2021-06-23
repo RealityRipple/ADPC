@@ -9,17 +9,23 @@ var adpc_option =
   let cAll = document.getElementById('cmbAll');
   cAll.value = pAll;
  },
- clear: function()
+ clear: async function()
  {
-  let hCount = {value: null};
-  let hList = adpc_option._Prefs.getChildList('', hCount);
+  let hList = await adpc_api._read(adpc_api._dbURLList, 'SELECT url, id, text FROM ' + adpc_api._dbURLList, {}, ['url', 'id', 'text']);
   let iCt = 0;
-  for (let i = 0; i < hList.length; i++)
+  if (hList !== false)
   {
-   if (hList[i] === 'forAll')
-    continue;
-   adpc_option._Prefs.clearUserPref(hList[i]);
-   iCt++;
+   for (let i = 0; i < hList.length; i++)
+   {
+    let idx = hList[i].id;
+    let pRows = await adpc_api._read(adpc_api._dbIDList, 'SELECT name FROM ' + adpc_api._dbIDList + ' WHERE idx = :idx', {'idx': idx}, ['name']);
+    if (pRows === false)
+     continue;
+    if (pRows.length !== 1)
+     continue;
+    await adpc_api.withdrawConsent(hList[i].url, pRows[0].name);
+    iCt++;
+   }
   }
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
   if (iCt === 0)

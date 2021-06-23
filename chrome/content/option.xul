@@ -14,6 +14,7 @@
  <keyset>
   <key id="close_cmd" keycode="VK_ESCAPE" oncommand="window.close();"/>
  </keyset>
+ <script type="application/x-javascript" src="chrome://adpc/content/api.js"/>
  <script type="application/x-javascript" src="chrome://adpc/content/option.js"/>
  <vbox flex="1">
   <hbox flex="1">

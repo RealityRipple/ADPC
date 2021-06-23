@@ -26,12 +26,12 @@ var adpc_control =
     let retVals = [];
     for (let i = 0; i < actions.length; i++)
     {
-     retVals.push({id: actions[i].id, text: actions[i].text, value: null});
+     retVals.push({id: actions[i].id, text: actions[i].text, value: -1});
     }
     window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
     for (let i = 0; i < retVals.length; i++)
     {
-     adpc_control.setConsent(uri, retVals[i].id, retVals[i].value);
+     await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
      if (retVals[i].value === 1)
       ret.consent.push(retVals[i].id);
      else if (retVals[i].value === 0)
@@ -58,7 +58,9 @@ var adpc_control =
     return;
    if (httpChannel.loadInfo.isTopLevelLoad !== true)
     return;
-   let hList = adpc_control.getHost(httpChannel.URI.asciiHost);
+   let hList = adpc_api.getHost(httpChannel.URI.asciiHost);
+   if (hList === null)
+    return;
    let hdr = adpc_control.makeHeader(hList);
    if (hdr !== false)
     httpChannel.setRequestHeader('ADPC', hdr, false);
@@ -224,8 +226,8 @@ var adpc_control =
    }
    for (let i = 0; i < txt.consentRequests.length; i++)
    {
-    let c = adpc_control.getConsent(host, txt.consentRequests[i].id);
-    if (c !== null && c !== -1)
+    let c = await adpc_api.getConsent(host, txt.consentRequests[i].id);
+    if (c !== -1)
      continue;
     adpc_control._alert[host].list.push(txt.consentRequests[i]);
    }
@@ -235,7 +237,7 @@ var adpc_control =
   {
   }
  },
- showDoorhanger: function()
+ showDoorhanger: async function()
  {
   for (let t = 0; t < gBrowser.tabs.length; t++)
   {
@@ -251,7 +253,7 @@ var adpc_control =
    {
     for (let i = 0; i < aList.length; i++)
     {
-     adpc_control.setConsent(tURI, aList[i].id, -1);
+     await adpc_api.setConsent(tURI, aList[i].id, -1, aList[i].text);
     }
     continue;
    }
@@ -259,7 +261,7 @@ var adpc_control =
    {
     for (let i = 0; i < aList.length; i++)
     {
-     adpc_control.setConsent(tURI, aList[i].id, -1);
+     await adpc_api.setConsent(tURI, aList[i].id, -1, aList[i].text);
     }
     continue;
    }
@@ -278,13 +280,19 @@ var adpc_control =
      {
       label: sAllow,
       accessKey: kAllow,
-      callback: function() { adpc_control.setConsent(tURI, aList[0].id, 1); }
+      callback: async function()
+      {
+       await adpc_api.setConsent(tURI, aList[0].id, 1, aList[0].text);
+      }
      },
      [
       {
        label: sDeny,
        accessKey: kDeny,
-       callback: function() { adpc_control.setConsent(tURI, aList[0].id, 0); }
+       callback: async function()
+       {
+        await adpc_api.setConsent(tURI, aList[0].id, 0, aList[0].text);
+       }
       }
      ],
      {
@@ -307,18 +315,30 @@ var adpc_control =
     {
      label: sDetails,
      accessKey: kDetails,
-     callback: function() { adpc_control.showDialog(brw, tURI, aList); }
+     callback: async function() { await adpc_control.showDialog(brw, tURI, aList); }
     },
     [
      {
       label: sAllowAll,
       accessKey: kAllowAll,
-      callback: function() { for (let i = 0; i < aList.length; i++) { adpc_control.setConsent(tURI, aList[i].id, 1); } }
+      callback: async function()
+      {
+       for (let i = 0; i < aList.length; i++)
+       {
+        await adpc_api.setConsent(tURI, aList[i].id, 1, aList[i].text);
+       }
+      }
      },
      {
       label: sDenyAll,
       accessKey: kDenyAll,
-      callback: function() { for (let i = 0; i < aList.length; i++) { adpc_control.setConsent(tURI, aList[i].id, 0); } }
+      callback: async function()
+      {
+       for (let i = 0; i < aList.length; i++)
+       {
+        await adpc_api.setConsent(tURI, aList[i].id, 0, aList[i].text);
+       }
+      }
      }
     ],
     {
@@ -327,20 +347,20 @@ var adpc_control =
    );
   }
  },
- showDialog: function(brw, uri, actions)
+ showDialog: async function(brw, uri, actions)
  {
   let retVals = [];
   for (let i = 0; i < actions.length; i++)
   {
-   retVals.push({id: actions[i].id, text: actions[i].text, value: null});
+   retVals.push({id: actions[i].id, text: actions[i].text, value: -1});
   }
   window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
   let laters = [];
   for (let i = 0; i < retVals.length; i++)
   {
-   if (retVals[i].value === null)
+   if (retVals[i].value === -1)
     laters.push(retVals[i]);
-   adpc_control.setConsent(uri, retVals[i].id, retVals[i].value);
+   await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
   }
   if (laters.length === 0)
    return;
@@ -359,13 +379,19 @@ var adpc_control =
     {
      label: sAllow,
      accessKey: kAllow,
-     callback: function() { adpc_control.setConsent(uri, laters[0].id, 1); }
+     callback: async function()
+     {
+      await adpc_api.setConsent(uri, laters[0].id, 1, laters[i].text);
+     }
     },
     [
      {
       label: sDeny,
       accessKey: kDeny,
-      callback: function() { adpc_control.setConsent(uri, laters[0].id, 0); }
+      callback: async function()
+      {
+       await adpc_api.setConsent(uri, laters[0].id, 0, laters[i].text);
+      }
      }
     ],
     {
@@ -388,18 +414,30 @@ var adpc_control =
    {
     label: sDetails,
     accessKey: kDetails,
-    callback: function() { adpc_control.showDialog(brw, uri, laters); }
+    callback: async function() { await adpc_control.showDialog(brw, uri, laters); }
    },
    [
     {
      label: sAllowAll,
      accessKey: kAllowAll,
-     callback: function() { for (let i = 0; i < laters.length; i++) { adpc_control.setConsent(uri, laters[i].id, 1); } }
+     callback: async function()
+     {
+      for (let i = 0; i < laters.length; i++)
+      {
+       await adpc_api.setConsent(uri, laters[i].id, 1, laters[i].text);
+      }
+     }
     },
     {
      label: sDenyAll,
      accessKey: kDenyAll,
-     callback: function() { for (let i = 0; i < laters.length; i++) { adpc_control.setConsent(uri, laters[i].id, 0); } }
+     callback: async function()
+     {
+      for (let i = 0; i < laters.length; i++)
+      {
+       await adpc_api.setConsent(uri, laters[i].id, 0, laters[i].text);
+      }
+     }
     }
    ],
    {
@@ -448,52 +486,6 @@ var adpc_control =
   if (adpc_control._Prefs.prefHasUserValue('forAll'))
    return (adpc_control._Prefs.getIntPref('forAll') === -1);
   return false;
- },
- getHost: function(host)
- {
-  let hBranch = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch('extensions.adpc.' + host + '.');
-  let hCount = {value: null};
-  let hList = hBranch.getChildList('', hCount);
-  let rList = {};
-  for (let i = 0; i < hList.length; i++)
-  {
-   let pref = hList[i];
-   let val = adpc_control.getConsent(host, pref);
-   rList[pref] = val;
-  }
-  return rList;
- },
- isStandardID: function(id)
- {
-  if (id.slice(0, 7) === 'http://')
-   return true;
-  if (id.slice(0, 8) === 'https://')
-   return true;
-  return false;
- },
- getConsent: function(host, id)
- {
-  if (adpc_control.isStandardID(id))
-   host = 'shared';
-  let sName = host + '.' + id;
-  if (adpc_control._Prefs.prefHasUserValue(sName))
-   return adpc_control._Prefs.getIntPref(sName);
-  return null;
- },
- setConsent: function(host, id, val)
- {
-  if (adpc_control.isStandardID(id))
-   host = 'shared';
-  let sName = host + '.' + id;
-  if (val === null)
-   adpc_control._Prefs.clearUserPref(sName);
-  else
-   adpc_control._Prefs.setIntPref(sName, val);
- },
- withdrawConsent: function(host, id)
- {
-  let sName = host + '.' + id;
-  adpc_control._Prefs.clearUserPref(sName);
  }
 };
 
