@@ -187,6 +187,15 @@ var adpc_api =
   }
   return -1;
  },
+ getConsentFromIDX: async function(idx)
+ {
+  let pRows = await adpc_api._read(adpc_api._dbIDList, 'SELECT name, value FROM ' + adpc_api._dbIDList + ' WHERE idx = :idx', {'idx': idx}, ['name', 'value']);
+  if (pRows === null)
+   return null;
+  if (pRows.length !== 1)
+   return null;
+  return pRows[0];
+ },
  getConsentID: async function(host, name)
  {
   if (adpc_api.isStandardID(name))

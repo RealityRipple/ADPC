@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://adpc/skin/option.css" type="text/css"?>
 <!DOCTYPE dialog[
  <!ENTITY % adpcOptionDTD SYSTEM "chrome://adpc/locale/option.dtd" >
  %adpcOptionDTD;
@@ -16,7 +17,7 @@
  </keyset>
  <script type="application/x-javascript" src="chrome://adpc/content/api.js"/>
  <script type="application/x-javascript" src="chrome://adpc/content/option.js"/>
- <vbox flex="1">
+ <vbox>
   <hbox flex="1">
    <label control="cmbAll" value="&all.label;" />
    <spacer flex="1" />
@@ -29,6 +30,13 @@
    </menulist>
   </hbox>
  </vbox>
+ <groupbox flex="1">
+  <caption><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
+  <vbox flex="1" id="lstScroll">
+   <vbox id="lstRequest" />
+  </vbox>
+ </groupbox>
+ <label id="lblStandard" value="&standard.label;" />
  <hbox>
   <button id="cmdClear"  class="dialog-button" label="&clearButton.label;" oncommand="adpc_option.clear();" />
   <spacer flex="1" />
