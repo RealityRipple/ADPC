@@ -48,6 +48,7 @@ var adpc_option =
    {
     lReq.removeChild(lReq.firstChild);
    }
+   document.getElementById('cmdClearURL').disabled = true;
   }
   else
   {
@@ -60,6 +61,7 @@ var adpc_option =
    }
    document.getElementById('cmbHost').selectedIndex = 0;
    adpc_option._hostList = retVals;
+   document.getElementById('cmdClearURL').disabled = false;
    await adpc_option.populateHost();
   }
  },
@@ -83,6 +85,7 @@ var adpc_option =
   const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
   let nHost = document.getElementById('cmbHost');
   let lblStd = document.getElementById('lblStandard');
+  document.getElementById('cmdClearURL').setAttribute('oncommand', 'adpc_option.clear("' + nHost.value + '");');
 
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
   let sAllow = locale.GetStringFromName('allow.label');
@@ -179,14 +182,27 @@ var adpc_option =
    adpc_option._prefList = {};
   adpc_option._prefList[id] = val;
  },
- clear: async function()
+ clear: async function(url)
  {
+  let prompts = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);
+  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
+  if (url === undefined || url === null)
+   url = false;
   let hList = await adpc_api._read(adpc_api._dbURLList, 'SELECT url, id, text FROM ' + adpc_api._dbURLList, {}, ['url', 'id', 'text']);
   let iCt = 0;
-  if (hList !== false)
+  if (hList !== false && hList.length > 0)
   {
+   let ret = false;
+   if (url === false)
+    ret = prompts.confirmEx(null, locale.GetStringFromName('clear.prompt.title'), locale.formatStringFromName('clear.prompt.multi', ['' + hList.length], 1), prompts.STD_YES_NO_BUTTONS, null, null, null, null, {value: false});
+   else
+    ret = prompts.confirmEx(null, locale.GetStringFromName('clear.prompt.title'), locale.formatStringFromName('clear.prompt.url', [url], 1), prompts.STD_YES_NO_BUTTONS, null, null, null, null, {value: false});
+   if (ret === 1)
+    return;
    for (let i = 0; i < hList.length; i++)
    {
+    if (url !== false && hList[i].url !== url)
+     continue;
     let idx = hList[i].id;
     let pRows = await adpc_api._read(adpc_api._dbIDList, 'SELECT name FROM ' + adpc_api._dbIDList + ' WHERE idx = :idx', {'idx': idx}, ['name']);
     if (pRows === false)
@@ -197,7 +213,6 @@ var adpc_option =
     iCt++;
    }
   }
-  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
   if (iCt === 0)
    alert(locale.GetStringFromName('clear.none'));
   else

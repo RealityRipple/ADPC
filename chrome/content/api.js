@@ -338,9 +338,12 @@ var adpc_api =
   if (adpc_api.isStandardID(name))
   {
    let idx = await adpc_api.getStandardID(name);
-   await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE id = ?1', [idx]);
-   await adpc_api._write(adpc_api._dbIDList, 'DELETE FROM ' + adpc_api._dbIDList + ' WHERE idx = ?1', [idx]);
-   return;   
+   if (idx !== null)
+   {
+    await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE id = ?1', [idx]);
+    await adpc_api._write(adpc_api._dbIDList, 'DELETE FROM ' + adpc_api._dbIDList + ' WHERE idx = ?1', [idx]);
+    return;   
+   }
   }
   let lRows = await adpc_api._read(adpc_api._dbURLList, 'SELECT id FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id']);
   if (lRows === null)

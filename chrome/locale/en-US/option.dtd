@@ -5,3 +5,4 @@
 <!ENTITY all.block "Reject">
 <!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">
+<!ENTITY clearAllButton.label "Clear All Choices">

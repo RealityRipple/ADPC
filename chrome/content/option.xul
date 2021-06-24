@@ -37,11 +37,15 @@
   <vbox flex="1" id="lstScroll">
    <vbox id="lstRequest" />
   </vbox>
+  <hbox>
+   <spacer flex="1" />
+   <button id="cmdClearURL" label="&clearButton.label;" />
+  </hbox>
  </groupbox>
  <label id="lblStandard" value="&standard.label;" />
  <spacer flex="1" />
  <hbox>
-  <button id="cmdClear"  class="dialog-button" label="&clearButton.label;" oncommand="adpc_option.clear();" />
+  <button id="cmdClear"  class="dialog-button" label="&clearAllButton.label;" oncommand="adpc_option.clear();" />
   <spacer flex="1" />
   <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_option.save(); window.close();" />
   <button id="cmdCancel" class="dialog-button" icon="cancel" label="&cancelButton.label;" oncommand="window.close();" />
