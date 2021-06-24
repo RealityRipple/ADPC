@@ -4,6 +4,8 @@
 }
 window
 {
+ min-width: 25em;
+ min-height: 13em;
  max-width: 40em;
  max-height: 25em;
 }
