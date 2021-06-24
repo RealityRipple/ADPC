@@ -3,4 +3,5 @@
 <!ENTITY all.none "Unset">
 <!ENTITY all.allow "Accept">
 <!ENTITY all.block "Reject">
+<!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">

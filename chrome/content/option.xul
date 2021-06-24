@@ -28,15 +28,18 @@
      <menuitem label="&all.block;" value="-1"/>
     </menupopup>
    </menulist>
+   <spacer flex="6" />
   </hbox>
  </vbox>
- <groupbox flex="1">
-  <caption><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
+ <spacer flex="1" />
+ <groupbox flex="6">
+  <caption><description value="&host.label;" /><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
   <vbox flex="1" id="lstScroll">
    <vbox id="lstRequest" />
   </vbox>
  </groupbox>
  <label id="lblStandard" value="&standard.label;" />
+ <spacer flex="1" />
  <hbox>
   <button id="cmdClear"  class="dialog-button" label="&clearButton.label;" oncommand="adpc_option.clear();" />
   <spacer flex="1" />
