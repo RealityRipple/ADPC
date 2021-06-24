@@ -345,7 +345,6 @@ var adpc_api =
   let lRows = await adpc_api._read(adpc_api._dbURLList, 'SELECT id FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id']);
   if (lRows === null)
    return;
-  let pFound = 0;
   for (let i = 0; i < lRows.length; i++)
   {
    let idx = lRows[i].id;
@@ -355,11 +354,10 @@ var adpc_api =
    if (pRows.length !== 1)
     continue;
    if (pRows[0].name === name)
+   {
     await adpc_api._write(adpc_api._dbIDList, 'DELETE FROM ' + adpc_api._dbIDList + ' WHERE idx = ?1', [idx]);
-   else
-    pFound++;
+    await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE url = ?1 AND id = ?2', [host, idx]);
+   }
   }
-  if (pFound === 0)
-   await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE url = ?1', [host]);
  }
 };
