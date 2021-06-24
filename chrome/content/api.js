@@ -273,34 +273,56 @@ var adpc_api =
   if (adpc_api.isStandardID(name))
   {
    if (idx === null)
+   {
     idx = await adpc_api.makeConsentID();
-   let inserted = await adpc_api._write(adpc_api._dbIDList, 'INSERT OR REPLACE INTO ' + adpc_api._dbIDList + ' (idx, name, value) VALUES (?1, ?2, ?3)', [idx, name, val]);
-   if (!inserted)
+    let stdInsertID = await adpc_api._write(adpc_api._dbIDList, 'INSERT OR REPLACE INTO ' + adpc_api._dbIDList + ' (idx, name, value) VALUES (?1, ?2, ?3)', [idx, name, val]);
+    if (!stdInsertID)
+     return false;
+    let stdInsertURL = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
+    if (!stdInsertURL)
+     return false;
+    return idx;
+   }
+   let stdUpdateID = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?2 WHERE idx = ?1', [idx, val]);
+   if (!stdUpdateID)
     return false;
-   let hosted = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
-   if (!hosted)
-    return false;
+   if (label !== null)
+   {
+    let lHosts = await adpc_api._read(adpc_api._dbURLList, 'SELECT * FROM ' + adpc_api._dbURLList + ' WHERE url = :url AND id = :id', {'url': host, 'id': idx}, ['url', 'id', 'text']);
+    if (lHosts === false || lHosts.length === 0)
+    {
+     let stdUpdInsertURL = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
+     if (!stdUpdInsertURL)
+      return false;
+    }
+    else
+    {
+     let stdUpdateURL = await adpc_api._write(adpc_api._dbURLList, 'UPDATE ' + adpc_api._dbURLList + ' SET text = ?3 WHERE url = ?1 AND id = ?2', [host, idx, label]);
+     if (!stdUpdateURL)
+      return false;
+    }
+   }
    return idx;
   }
   if (idx !== null)
   {
-   let updated = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
-   if (!updated)
+   let updateID = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
+   if (!updateID)
     return false;
    if (label !== null)
    {
-    let hostupdated = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbURLList + ' SET text = ?1 WHERE id = ?2', [label, idx]);
-    if (!hostupdated)
+    let updateURL = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbURLList + ' SET text = ?1 WHERE id = ?2', [label, idx]);
+    if (!updateURL)
      return false;
    }
    return idx;
   }
   idx = await adpc_api.makeConsentID();
-  let inserted = await adpc_api._write(adpc_api._dbIDList, 'INSERT INTO ' + adpc_api._dbIDList + ' (idx, name, value) VALUES (?1, ?2, ?3)', [idx, name, val]);
-  if (!inserted)
+  let insertID = await adpc_api._write(adpc_api._dbIDList, 'INSERT INTO ' + adpc_api._dbIDList + ' (idx, name, value) VALUES (?1, ?2, ?3)', [idx, name, val]);
+  if (!insertID)
    return false;
-  let hosted = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
-  if (!hosted)
+  let insertURL = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
+  if (!insertURL)
    return false;
   return idx;
  },
