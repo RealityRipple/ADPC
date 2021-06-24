@@ -8,41 +8,39 @@ var adpc_control =
   let observerService = Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService);
   observerService.addObserver(adpc_control.httpRequestObserver, 'http-on-modify-request', false);
   observerService.addObserver(adpc_control.httpResponseObserver, 'http-on-examine-response', false);
-  observerService.addObserver(adpc_control.documentCreated, 'document-element-inserted', false);
+  observerService.addObserver(adpc_control.documentCreated, 'content-document-global-created', false);
+  observerService.addObserver(adpc_control.docElementInserted, 'document-element-inserted', false);
  },
- /*
- dpcRequest: async function(d)
+ dpcDialog: function(wnd, actions)
  {
-  let dRet = await adpc_control.dpcDialog(this, d);
-  return dRet;
- },
- dpcDialog: async function(brw, actions)
- {
-  let p = new Promise(
+  let p = new wnd.Promise(
    function(resolve, reject)
    {
-    let ret = {consent: [], withdraw: ['*'], object: []};
-    let uri = brw.registeredOpenURI.asciiHost;
+    let ret = {consent: [], withdraw: ['*'], _object: []};
+    let uri = wnd.document.domain;
     let retVals = [];
+    let prev = adpc_api.getHost(uri);
     for (let i = 0; i < actions.length; i++)
     {
-     retVals.push({id: actions[i].id, text: actions[i].text, value: -1});
+     let val = -1;
+     if (actions[i].id in prev)
+      val = prev[actions[i].id];
+     retVals.push({id: actions[i].id, text: actions[i].text, value: val});
     }
     window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
     for (let i = 0; i < retVals.length; i++)
     {
-     await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
+     adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text); //await
      if (retVals[i].value === 1)
       ret.consent.push(retVals[i].id);
      else if (retVals[i].value === 0)
-      ret.object.push(retVals[i].id);
+      ret._object.push(retVals[i].id);
     }
     resolve(ret);
    }
   );
   return p;
  },
- */
  httpRequestObserver:
  {
   observe: function(subject, topic, data) 
@@ -95,6 +93,23 @@ var adpc_control =
   }
  },
  documentCreated:
+ {
+  observe: function(subject, topic, data) 
+  {
+   if (topic !== 'content-document-global-created')
+    return;
+   let wnd = Components.utils.waiveXrays(subject);
+   let dpc = {
+    request: function(consentRequestsList)
+    {
+     return adpc_control.dpcDialog(wnd, consentRequestsList);
+    }
+   };
+   let dpclone = Components.utils.cloneInto(dpc, wnd, {cloneFunctions: true});
+   wnd.navigator.dataProtectionControl = dpclone;
+  }
+ },
+ docElementInserted:
  {
   observe: function(subject, topic, data) 
   {
