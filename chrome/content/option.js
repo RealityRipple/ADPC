@@ -2,6 +2,7 @@ var adpc_option =
 {
  _Prefs: Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch('extensions.adpc.'),
  _hostList: null,
+ _prefList: null,
  init: function()
  {
   let pAll = 0;
@@ -14,9 +15,9 @@ var adpc_option =
  listHost: async function()
  {
   const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-  
   let retVals = await adpc_api._read(adpc_api._dbURLList, 'SELECT url, id, text FROM ' + adpc_api._dbURLList, {}, ['url', 'id', 'text']);
   let sHosts = [];
+  adpc_option._prefList = {};
   for (let i = 0; i < retVals.length; i++)
   {
    if (!sHosts.includes(retVals[i].url))
@@ -26,6 +27,7 @@ var adpc_option =
     continue;
    retVals[i].name = val.name;
    retVals[i].value = val.value;
+   adpc_option._prefList[retVals[i].id] = val.value;
   }
   let cHost = document.getElementById('cmbHost').childNodes[0];
   while (cHost.firstChild)
@@ -66,6 +68,7 @@ var adpc_option =
   if (adpc_option._hostList === null)
   {
    let retVals = await adpc_api._read(adpc_api._dbURLList, 'SELECT url, id, text FROM ' + adpc_api._dbURLList, {}, ['url', 'id', 'text']);
+   adpc_option._prefList = {};
    for (let i = 0; i < retVals.length; i++)
    {
     let val = await adpc_api.getConsentFromIDX(retVals[i].id);
@@ -73,6 +76,7 @@ var adpc_option =
      continue;
     retVals[i].name = val.name;
     retVals[i].value = val.value;
+    adpc_option._prefList[retVals[i].id] = val.value;
    }
    adpc_option._hostList = retVals;
   }
@@ -114,6 +118,9 @@ var adpc_option =
    lNew.setAttribute('flex', '1');
    let lLbl = document.createElementNS(XUL_NS, 'description');
    lLbl.setAttribute('flex', '1');
+   let iVal = retVals[i].value;
+   if (retVals[i].id in adpc_option._prefList)
+    iVal = adpc_option._prefList[retVals[i].id];
    let sTxt = retVals[i].text;
    if (std)
     sTxt += '*'
@@ -131,21 +138,24 @@ var adpc_option =
    lAllow.setAttribute('label', sAllow);
    lAllow.setAttribute('accesskey', kAllow);
    lAllow.setAttribute('value', 'allow');
-   if (retVals[i].value === 1)
+   lAllow.setAttribute('oncommand', 'adpc_option.chooseOpt(\'' + retVals[i].id + '\', 1);')
+   if (iVal === 1)
     lAllow.setAttribute('selected', 'true');
    lGrp.appendChild(lAllow);
    let lDeny = document.createElementNS(XUL_NS, 'radio');
    lDeny.setAttribute('label', sDeny);
    lDeny.setAttribute('accesskey', kDeny);
    lDeny.setAttribute('value', 'deny');
-   if (retVals[i].value === 0)
+   lDeny.setAttribute('oncommand', 'adpc_option.chooseOpt(\'' + retVals[i].id + '\', 0);')
+   if (iVal === 0)
     lDeny.setAttribute('selected', 'true');
    lGrp.appendChild(lDeny);
    let lLater = document.createElementNS(XUL_NS, 'radio');
    lLater.setAttribute('label', sLater);
    lLater.setAttribute('accesskey', kLater);
    lLater.setAttribute('value', 'later');
-   if (retVals[i].value === -1)
+   lLater.setAttribute('oncommand', 'adpc_option.chooseOpt(\'' + retVals[i].id + '\', -1);')
+   if (iVal === -1)
     lLater.setAttribute('selected', 'true');
    lGrp.appendChild(lLater);
    lAct.appendChild(lGrp);
@@ -162,6 +172,12 @@ var adpc_option =
    lblStd.style.display = 'none';
   else
    lblStd.style.display = '-moz-box';
+ },
+ chooseOpt: function(id, val)
+ {
+  if (adpc_option._prefList === null)
+   adpc_option._prefList = {};
+  adpc_option._prefList[id] = val;
  },
  clear: async function()
  {
@@ -188,9 +204,14 @@ var adpc_option =
    alert(locale.formatStringFromName('clear.success', [iCt], 1));
   adpc_option.listHost();
  },
- save: function()
+ save: async function()
  {
   let cAll = document.getElementById('cmbAll');
   adpc_option._Prefs.setIntPref('forAll', cAll.value);
+  for (idx in adpc_option._prefList)
+  {
+   let val = adpc_option._prefList[idx];
+   await adpc_api.setConsentByIDX(idx, val);
+  }
  }
 };

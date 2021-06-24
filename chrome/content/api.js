@@ -326,6 +326,13 @@ var adpc_api =
    return false;
   return idx;
  },
+ setConsentByIDX: async function(idx, val)
+ {
+  let ret = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
+  if (!ret)
+   return false;
+  return idx;
+ },
  withdrawConsent: async function(host, name)
  {
   if (adpc_api.isStandardID(name))
