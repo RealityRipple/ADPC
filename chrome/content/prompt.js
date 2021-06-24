@@ -84,7 +84,7 @@ var adpc_prompt =
    else if (lGrp.value === 'deny')
     retVals[i].value = 0;
    else
-    retVals[i].value = null;
+    retVals[i].value = -1;
   }
  }
 };
