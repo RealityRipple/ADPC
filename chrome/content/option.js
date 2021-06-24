@@ -10,6 +10,11 @@ var adpc_option =
    pAll = adpc_option._Prefs.getIntPref('forAll');
   let cAll = document.getElementById('cmbAll');
   cAll.value = pAll;
+  let cJS = document.getElementById('chkJSPrompt');
+  if (adpc_option._Prefs.prefHasUserValue('jsPrompt'))
+   cJS.checked = adpc_option._Prefs.getBoolPref('jsPrompt');
+  else
+   cJS.checked = true;
   adpc_option.listHost();
  },
  listHost: async function()
@@ -223,6 +228,8 @@ var adpc_option =
  {
   let cAll = document.getElementById('cmbAll');
   adpc_option._Prefs.setIntPref('forAll', cAll.value);
+  let cJS = document.getElementById('chkJSPrompt');
+  adpc_option._Prefs.setBoolPref('jsPrompt', cJS.checked);
   for (idx in adpc_option._prefList)
   {
    let val = adpc_option._prefList[idx];

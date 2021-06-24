@@ -20,14 +20,22 @@ var adpc_control =
     let uri = wnd.document.domain;
     let retVals = [];
     let prev = adpc_api.getHost(uri);
+    let jsPrompt = true;
+    if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
+     jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
+    let remVals = [];
     for (let i = 0; i < actions.length; i++)
     {
      let val = -1;
      if (actions[i].id in prev)
       val = prev[actions[i].id];
-     retVals.push({id: actions[i].id, text: actions[i].text, value: val});
+     if (!jsPrompt && val !== -1)
+      remVals.push({id: actions[i].id, text: actions[i].text, value: val});
+     else
+      retVals.push({id: actions[i].id, text: actions[i].text, value: val});
     }
-    window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
+    if (retVals.length > 0)
+     window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
     for (let i = 0; i < retVals.length; i++)
     {
      adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text); //await
@@ -35,6 +43,13 @@ var adpc_control =
       ret.consent.push(retVals[i].id);
      else if (retVals[i].value === 0)
       ret._object.push(retVals[i].id);
+    }
+    for (let i = 0; i < remVals.length; i++)
+    {
+     if (remVals[i].value === 1)
+      ret.consent.push(remVals[i].id);
+     else if (remVals[i].value === 0)
+      ret._object.push(remVals[i].id);
     }
     resolve(ret);
    }

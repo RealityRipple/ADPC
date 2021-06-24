@@ -30,6 +30,9 @@
    </menulist>
    <spacer flex="6" />
   </hbox>
+  <hbox>
+   <checkbox id="chkJSPrompt" label="List previously selected choices if triggered by JavaScript" />
+  </hbox>
  </vbox>
  <spacer flex="1" />
  <groupbox flex="6">
