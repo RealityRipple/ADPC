@@ -113,15 +113,16 @@ var adpc_control =
   {
    if (topic !== 'content-document-global-created')
     return;
-   let wnd = Components.utils.waiveXrays(subject);
+   let nav = Components.utils.waiveXrays(subject.navigator);
    let dpc = {
     request: function(consentRequestsList)
     {
-     return adpc_control.dpcDialog(wnd, consentRequestsList);
+     return adpc_control.dpcDialog(subject, consentRequestsList);
     }
    };
-   let dpclone = Components.utils.cloneInto(dpc, wnd, {cloneFunctions: true});
-   wnd.navigator.dataProtectionControl = dpclone;
+   let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
+   nav.dataProtectionControl = dpclone;
+   Components.utils.unwaiveXrays(nav);
   }
  },
  docElementInserted:
