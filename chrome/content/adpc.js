@@ -14,7 +14,7 @@ var adpc_control =
  dpcDialog: function(wnd, actions)
  {
   let p = new wnd.Promise(
-   function(resolve, reject)
+   async function(resolve, reject)
    {
     let ret = {consent: [], withdraw: [], _object: []};
     if (Array.isArray(actions))
@@ -48,7 +48,7 @@ var adpc_control =
       window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
      for (let i = 0; i < retVals.length; i++)
      {
-      adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
+      await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
       if (retVals[i].value === 1)
        ret.consent.push(retVals[i].id);
       else if (retVals[i].value === 0)
@@ -58,7 +58,7 @@ var adpc_control =
      }
      for (let i = 0; i < resVals.length; i++)
      {
-      adpc_api.setConsent(uri, resVals[i].id, resVals[i].value, resVals[i].text);
+      await adpc_api.setConsent(uri, resVals[i].id, resVals[i].value, resVals[i].text);
       if (resVals[i].value === 1)
        ret.consent.push(resVals[i].id);
       else if (resVals[i].value === 0)
