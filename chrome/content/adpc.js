@@ -113,6 +113,10 @@ var adpc_control =
   {
    if (topic !== 'content-document-global-created')
     return;
+   if (!(subject instanceof Window))
+    return;
+   if (!(subject.navigator instanceof Navigator))
+    return;
    let nav = Components.utils.waiveXrays(subject.navigator);
    let dpc = {
     request: function(consentRequestsList)
