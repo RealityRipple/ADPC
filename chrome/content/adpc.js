@@ -6,10 +6,10 @@ var adpc_control =
  init: function()
  {
   let observerService = Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService);
-  observerService.addObserver(adpc_control.httpRequestObserver, 'http-on-modify-request', false);
-  observerService.addObserver(adpc_control.httpResponseObserver, 'http-on-examine-response', false);
-  observerService.addObserver(adpc_control.documentCreated, 'content-document-global-created', false);
-  observerService.addObserver(adpc_control.docElementInserted, 'document-element-inserted', false);
+  observerService.addObserver(adpc_control.eventObserver, 'http-on-modify-request', false);
+  observerService.addObserver(adpc_control.eventObserver, 'http-on-examine-response', false);
+  observerService.addObserver(adpc_control.eventObserver, 'content-document-global-created', false);
+  observerService.addObserver(adpc_control.eventObserver, 'document-element-inserted', false);
  },
  dpcDialog: function(wnd, actions)
  {
@@ -72,118 +72,118 @@ var adpc_control =
   );
   return p;
  },
- httpRequestObserver:
+ handleOnModifyRequest: function(hChan)
  {
-  observe: function(subject, topic, data) 
-  {
-   if (topic !== 'http-on-modify-request')
-    return;
-   let httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
-   if ((httpChannel.loadFlags & 0x10000) != 0x10000)
-    return;
-   if ((httpChannel.loadFlags & 0x80000) != 0x80000)
-    return;
-   if (!httpChannel.hasOwnProperty('loadInfo'))
-    return;
-   if (httpChannel.loadInfo.isTopLevelLoad !== true)
-    return;
-   let hList = adpc_api.getHost(httpChannel.URI.asciiHost);
-   if (hList === null)
-    return;
-   let hdr = adpc_control.makeHeader(hList);
-   if (hdr !== false)
-    httpChannel.setRequestHeader('ADPC', hdr, false);
-  }
+  if ((hChan.loadFlags & 0x10000) != 0x10000)
+   return;
+  if ((hChan.loadFlags & 0x80000) != 0x80000)
+   return;
+  if (!hChan.hasOwnProperty('loadInfo'))
+   return;
+  if (hChan.loadInfo.isTopLevelLoad !== true)
+   return;
+  let hList = adpc_api.getHost(hChan.URI.asciiHost);
+  if (hList === null)
+   return;
+  let hdr = adpc_control.makeHeader(hList);
+  if (hdr !== false)
+   hChan.setRequestHeader('ADPC', hdr, false);
  },
- httpResponseObserver:
+ handleOnExamineResponse: function(hResp)
  {
-  observe: function(subject, topic, data) 
+  let hLink = null;
+  try
   {
-   if (topic !== 'http-on-examine-response')
+   hLink = hResp.getResponseHeader('Link');
+  }
+  catch (ex)
+  {
+   hLink = null;
+  }
+  if (hLink !== null)
+  {
+   let sURL = adpc_control.parseFromHeader(hLink);
+   if (sURL !== false)
+   {
+    if (sURL.slice(0, 1) === '/')
+     sURL = hResp.URI.prePath + sURL;
+    adpc_control.grabJSON(hResp.URI.asciiHost, sURL);
     return;
-   let hLink = null;
-   try
-   {
-    hLink = subject.getResponseHeader('Link');
-   }
-   catch (ex)
-   {
-    hLink = null;
-   }
-   if (hLink !== null)
-   {
-    let sURL = adpc_control.parseFromHeader(hLink);
-    if (sURL !== false)
-    {
-     if (sURL.slice(0, 1) === '/')
-      sURL = subject.URI.prePath + sURL;
-     adpc_control.grabJSON(subject.URI.asciiHost, sURL);
-     return;
-    }
    }
   }
  },
- documentCreated:
+ handleDocCreated: function(wnd)
  {
-  observe: function(subject, topic, data) 
+  if (!(wnd instanceof Window))
+   return;
+  if (!(wnd.navigator instanceof Navigator))
+   return;
+  let nav = Components.utils.waiveXrays(wnd.navigator);
+  let dpc = {
+   request: function(consentRequestsList)
+   {
+    return adpc_control.dpcDialog(wnd, consentRequestsList);
+   }
+  };
+  let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
+  nav.dataProtectionControl = dpclone;
+  Components.utils.unwaiveXrays(nav);
+ },
+ handleDocInserted: function(doc)
+ {
+  if (doc.head === undefined || doc.head === null)
+   return;
+  let headElements = doc.head.children;
+  if (headElements === undefined || headElements === null || headElements.length === 0)
+   return;
+  let ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService);
+  let sHost = ioService.newURI(doc.documentURI);
+  let sList = [];
+  for (let i = 0; i < headElements.length; i++)
   {
-   if (topic !== 'content-document-global-created')
+   if (headElements[i].tagName !== 'LINK')
+    continue;
+   if (headElements[i].rel !== 'consent-requests')
+    continue;
+   sList.push(headElements[i]);
+  }
+  if (sList.length === 0)
+   return;
+  for (let i = 0; i < sList.length; i++)
+  {
+   if (navigator.languages.includes(sList[i].hreflang))
+   {
+    adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
     return;
-   if (!(subject instanceof Window))
+   }
+  }
+  for (let i = 0; i < sList.length; i++)
+  {
+   if (sList[i].hreflang === '')
+   {
+    adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
     return;
-   if (!(subject.navigator instanceof Navigator))
-    return;
-   let nav = Components.utils.waiveXrays(subject.navigator);
-   let dpc = {
-    request: function(consentRequestsList)
-    {
-     return adpc_control.dpcDialog(subject, consentRequestsList);
-    }
-   };
-   let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
-   nav.dataProtectionControl = dpclone;
-   Components.utils.unwaiveXrays(nav);
+   }
   }
  },
- docElementInserted:
+ eventObserver:
  {
   observe: function(subject, topic, data) 
   {
-   if (topic !== 'document-element-inserted')
-    return;
-   if (subject.head === undefined || subject.head === null)
-    return;
-   let headElements = subject.head.children;
-   if (headElements === undefined || headElements === null || headElements.length === 0)
-    return;
-   let ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService);
-   let sHost = ioService.newURI(subject.documentURI);
-   let sList = [];
-   for (let i = 0; i < headElements.length; i++)
+   switch (topic)
    {
-    if (headElements[i].tagName !== 'LINK')
-     continue;
-    if (headElements[i].rel !== 'consent-requests')
-     continue;
-    sList.push(headElements[i]);
-   }
-   if (sList.length === 0)
-    return;
-   for (let i = 0; i < sList.length; i++)
-   {
-    if (navigator.languages.includes(sList[i].hreflang))
-    {
-     adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
-     return;
-    }
-   }
-   for (let i = 0; i < sList.length; i++)
-   {
-    if (sList[i].hreflang === '')
-    {
-     adpc_control.grabJSON(sHost.asciiHost, sList[i].href);
-     return;
-    }
+    case 'http-on-modify-request':
+     let httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+     adpc_control.handleOnModifyRequest(httpChannel);
+     break;
+    case 'http-on-examine-response':
+     adpc_control.handleOnExamineResponse(subject);
+     break;
+    case 'content-document-global-created':
+     adpc_control.handleDocCreated(subject);
+     break;
+    case 'document-element-inserted':
+     adpc_control.handleDocInserted(subject);
    }
   }
  },
