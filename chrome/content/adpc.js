@@ -274,7 +274,10 @@ var adpc_control =
      continue;
     adpc_control._alert[host].list.push(txt.consentRequests[i]);
    }
-   adpc_control._alert[host].timer = setTimeout(adpc_control.showDoorhanger, 5000);
+   let iWait = 3000;
+   if (adpc_control.allAllowed() || adpc_control.allBlocked())
+    iWait = 50;
+   adpc_control._alert[host].timer = setTimeout(adpc_control.showDoorhanger, iWait);
   }
   catch (ex)
   {
