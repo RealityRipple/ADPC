@@ -16,7 +16,7 @@ var adpc_control =
   let p = new wnd.Promise(
    function(resolve, reject)
    {
-    let ret = {consent: [], withdraw: ['*'], _object: []};
+    let ret = {consent: [], withdraw: [], _object: []};
     if (Array.isArray(actions))
     {
      let uri = wnd.document.domain;
@@ -53,6 +53,8 @@ var adpc_control =
        ret.consent.push(retVals[i].id);
       else if (retVals[i].value === 0)
        ret._object.push(retVals[i].id);
+      else
+       ret.withdraw.push(retVals[i].id);
      }
      for (let i = 0; i < resVals.length; i++)
      {
@@ -61,6 +63,8 @@ var adpc_control =
        ret.consent.push(resVals[i].id);
       else if (resVals[i].value === 0)
        ret._object.push(resVals[i].id);
+      else
+       ret.withdraw.push(resVals[i].id);
      }
      for (let i = 0; i < remVals.length; i++)
      {
@@ -68,6 +72,8 @@ var adpc_control =
        ret.consent.push(remVals[i].id);
       else if (remVals[i].value === 0)
        ret._object.push(remVals[i].id);
+      else
+       ret.withdraw.push(remVals[i].id);
      }
     }
     resolve(ret);
