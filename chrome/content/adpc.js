@@ -152,10 +152,10 @@ var adpc_control =
   if (headElements === undefined || headElements === null || headElements.length === 0)
    return;
   let wnd = null;
-  for (let t = 0; t < gBrowser.tabs.length; t++)
+  for (let t = 0; t < gBrowser.browsers.length; t++)
   {
-   let brw = gBrowser.tabs[t].linkedBrowser;
-   if (doc.defaultView.document === brw.contentWindow.document)
+   let brw = gBrowser.browsers[t];
+   if (doc.defaultView.document === brw.contentDocument)
    {
     wnd = brw;
     break;
