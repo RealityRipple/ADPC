@@ -10,76 +10,6 @@ var adpc_control =
   observerService.addObserver(adpc_control.eventObserver, 'content-document-global-created', false);
   observerService.addObserver(adpc_control.eventObserver, 'document-element-inserted', false);
  },
- dpcDialog: function(wnd, actions)
- {
-  let p = new wnd.Promise(
-   async function(resolve, reject)
-   {
-    let ret = {consent: [], withdraw: [], _object: []};
-    if (Array.isArray(actions))
-    {
-     let uri = wnd.document.domain;
-     let retVals = [];
-     let prev = adpc_api.getHost(uri);
-     let jsPrompt = true;
-     if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
-      jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
-     let remVals = [];
-     let resVals = [];
-     for (let i = 0; i < actions.length; i++)
-     {
-      let val = -1;
-      if (actions[i].id in prev)
-       val = prev[actions[i].id];
-      if (!jsPrompt)
-      {
-       if (val !== -1)
-        remVals.push({id: actions[i].id, text: actions[i].text, value: val});
-       else if (adpc_control.allAllowed() || adpc_control.allBlocked())
-        resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
-       else
-        retVals.push({id: actions[i].id, text: actions[i].text, value: val});
-      }
-      else
-       retVals.push({id: actions[i].id, text: actions[i].text, value: val});
-     }
-     if (retVals.length > 0)
-      window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
-     for (let i = 0; i < retVals.length; i++)
-     {
-      await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
-      if (retVals[i].value === 1)
-       ret.consent.push(retVals[i].id);
-      else if (retVals[i].value === 0)
-       ret._object.push(retVals[i].id);
-      else
-       ret.withdraw.push(retVals[i].id);
-     }
-     for (let i = 0; i < resVals.length; i++)
-     {
-      await adpc_api.setConsent(uri, resVals[i].id, resVals[i].value, resVals[i].text);
-      if (resVals[i].value === 1)
-       ret.consent.push(resVals[i].id);
-      else if (resVals[i].value === 0)
-       ret._object.push(resVals[i].id);
-      else
-       ret.withdraw.push(resVals[i].id);
-     }
-     for (let i = 0; i < remVals.length; i++)
-     {
-      if (remVals[i].value === 1)
-       ret.consent.push(remVals[i].id);
-      else if (remVals[i].value === 0)
-       ret._object.push(remVals[i].id);
-      else
-       ret.withdraw.push(remVals[i].id);
-     }
-    }
-    resolve(ret);
-   }
-  );
-  return p;
- },
  handleOnModifyRequest: function(hChan)
  {
   if ((hChan.loadFlags & 0x10000) != 0x10000)
@@ -525,6 +455,76 @@ var adpc_control =
     learnMoreURL: 'https://www.dataprotectioncontrol.org/spec/'
    }
   );
+ },
+ dpcDialog: function(wnd, actions)
+ {
+  let p = new wnd.Promise(
+   async function(resolve, reject)
+   {
+    let ret = {consent: [], withdraw: [], _object: []};
+    if (Array.isArray(actions))
+    {
+     let uri = wnd.document.domain;
+     let retVals = [];
+     let prev = adpc_api.getHost(uri);
+     let jsPrompt = true;
+     if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
+      jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
+     let remVals = [];
+     let resVals = [];
+     for (let i = 0; i < actions.length; i++)
+     {
+      let val = -1;
+      if (actions[i].id in prev)
+       val = prev[actions[i].id];
+      if (!jsPrompt)
+      {
+       if (val !== -1)
+        remVals.push({id: actions[i].id, text: actions[i].text, value: val});
+       else if (adpc_control.allAllowed() || adpc_control.allBlocked())
+        resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
+       else
+        retVals.push({id: actions[i].id, text: actions[i].text, value: val});
+      }
+      else
+       retVals.push({id: actions[i].id, text: actions[i].text, value: val});
+     }
+     if (retVals.length > 0)
+      window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
+     for (let i = 0; i < retVals.length; i++)
+     {
+      await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
+      if (retVals[i].value === 1)
+       ret.consent.push(retVals[i].id);
+      else if (retVals[i].value === 0)
+       ret._object.push(retVals[i].id);
+      else
+       ret.withdraw.push(retVals[i].id);
+     }
+     for (let i = 0; i < resVals.length; i++)
+     {
+      await adpc_api.setConsent(uri, resVals[i].id, resVals[i].value, resVals[i].text);
+      if (resVals[i].value === 1)
+       ret.consent.push(resVals[i].id);
+      else if (resVals[i].value === 0)
+       ret._object.push(resVals[i].id);
+      else
+       ret.withdraw.push(resVals[i].id);
+     }
+     for (let i = 0; i < remVals.length; i++)
+     {
+      if (remVals[i].value === 1)
+       ret.consent.push(remVals[i].id);
+      else if (remVals[i].value === 0)
+       ret._object.push(remVals[i].id);
+      else
+       ret.withdraw.push(remVals[i].id);
+     }
+    }
+    resolve(ret);
+   }
+  );
+  return p;
  },
  makeHeader: function(hList)
  {
