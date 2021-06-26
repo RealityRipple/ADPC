@@ -339,6 +339,8 @@ var adpc_control =
    }
    return;
   }
+  if (host !== wnd.registeredOpenURI.asciiHost)
+   return;
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
   if (list.length === 1)
   {
