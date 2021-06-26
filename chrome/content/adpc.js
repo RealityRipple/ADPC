@@ -135,22 +135,11 @@ var adpc_control =
   if (!(wnd.navigator instanceof Navigator))
    return;
   let nav = Components.utils.waiveXrays(wnd.navigator);
-  let dpc = {
-   request: function(consentRequestsList)
-   {
-    if (wnd !== wnd.top)
-    {
-     return new wnd.Promise(
-      async function(resolve, reject)
-      {
-       let ret = {consent: [], withdraw: [], _object: []};
-       resolve(ret);
-      }
-     );
-    }
-    return adpc_control.dpcDialog(wnd, consentRequestsList);
-   }
-  };
+  let dpc = {};
+  if (wnd === wnd.top)
+   dpc.request = function(consentRequestsList) { return adpc_control.dpcDialog(wnd, consentRequestsList); };
+  else
+   dpc.request = function(consentRequestsList) { return new wnd.Promise(async function(resolve, reject) { resolve({consent: [], withdraw: [], _object: []}); }); };
   let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
   nav.dataProtectionControl = dpclone;
   Components.utils.unwaiveXrays(nav);
