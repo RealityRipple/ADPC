@@ -358,27 +358,27 @@ var adpc_control =
    }
   );
  },
- showDialog: async function(brw, uri, actions)
+ showDialog: async function(brw, host, actions)
  {
   let retVals = [];
   for (let i = 0; i < actions.length; i++)
   {
    retVals.push({id: actions[i].id, text: actions[i].text, value: -1});
   }
-  window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
+  window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
   let laters = [];
   for (let i = 0; i < retVals.length; i++)
   {
    if (retVals[i].value === -1)
     laters.push(retVals[i]);
-   await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
+   await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
   }
   if (laters.length === 0)
    return;
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties'); 
   if (laters.length === 1)
   {
-   let sPermissionSng = locale.formatStringFromName('permission.single', [uri, laters[0].text], 2);
+   let sPermissionSng = locale.formatStringFromName('permission.single', [host, laters[0].text], 2);
    let sAllow = locale.GetStringFromName('allow.label');
    let kAllow = locale.GetStringFromName('allow.accesskey');
    let sDeny = locale.GetStringFromName('deny.label');
@@ -392,7 +392,7 @@ var adpc_control =
      accessKey: kAllow,
      callback: async function()
      {
-      await adpc_api.setConsent(uri, laters[0].id, 1, laters[i].text);
+      await adpc_api.setConsent(host, laters[0].id, 1, laters[i].text);
      }
     },
     [
@@ -401,7 +401,7 @@ var adpc_control =
       accessKey: kDeny,
       callback: async function()
       {
-       await adpc_api.setConsent(uri, laters[0].id, 0, laters[i].text);
+       await adpc_api.setConsent(host, laters[0].id, 0, laters[i].text);
       }
      }
     ],
@@ -411,7 +411,7 @@ var adpc_control =
    );
    return;
   }
-  let sPermissionPlr = locale.formatStringFromName('permission.plural', [uri], 1);
+  let sPermissionPlr = locale.formatStringFromName('permission.plural', [host], 1);
   let sDetails = locale.GetStringFromName('details.label');
   let kDetails = locale.GetStringFromName('details.accesskey');
   let sAllowAll = locale.GetStringFromName('allow.all.label');
@@ -425,7 +425,7 @@ var adpc_control =
    {
     label: sDetails,
     accessKey: kDetails,
-    callback: async function() { await adpc_control.showDialog(brw, uri, laters); }
+    callback: async function() { await adpc_control.showDialog(brw, host, laters); }
    },
    [
     {
@@ -435,7 +435,7 @@ var adpc_control =
      {
       for (let i = 0; i < laters.length; i++)
       {
-       await adpc_api.setConsent(uri, laters[i].id, 1, laters[i].text);
+       await adpc_api.setConsent(host, laters[i].id, 1, laters[i].text);
       }
      }
     },
@@ -446,7 +446,7 @@ var adpc_control =
      {
       for (let i = 0; i < laters.length; i++)
       {
-       await adpc_api.setConsent(uri, laters[i].id, 0, laters[i].text);
+       await adpc_api.setConsent(host, laters[i].id, 0, laters[i].text);
       }
      }
     }
