@@ -199,7 +199,7 @@ var adpc_option =
   {
    let ret = false;
    if (url === false)
-    ret = prompts.confirmEx(null, locale.GetStringFromName('clear.prompt.title'), locale.formatStringFromName('clear.prompt.multi', ['' + hList.length], 1), prompts.STD_YES_NO_BUTTONS, null, null, null, null, {value: false});
+    ret = prompts.confirmEx(null, locale.GetStringFromName('clear.prompt.title'), locale.formatStringFromName('clear.prompt.multi', [document.getElementById('cmbHost').itemCount], 1), prompts.STD_YES_NO_BUTTONS, null, null, null, null, {value: false});
    else
     ret = prompts.confirmEx(null, locale.GetStringFromName('clear.prompt.title'), locale.formatStringFromName('clear.prompt.url', [url], 1), prompts.STD_YES_NO_BUTTONS, null, null, null, null, {value: false});
    if (ret === 1)
