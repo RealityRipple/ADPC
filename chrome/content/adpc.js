@@ -342,7 +342,13 @@ var adpc_control =
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
   if (list.length === 1)
   {
-   let sPermissionSng = locale.formatStringFromName('permission.single', [host, list[0].text], 2);
+   let cleanText = list[0].text;
+   cleanText = cleanText.replaceAll('"', '');
+   while (cleanText.includes('\'\''))
+   {
+    cleanText = cleanText.replaceAll('\'\'', '\'');
+   }
+   let sPermissionSng = locale.formatStringFromName('permission.single', [host, cleanText], 2);
    let sAllow = locale.GetStringFromName('allow.label');
    let kAllow = locale.GetStringFromName('allow.accesskey');
    let sDeny = locale.GetStringFromName('deny.label');
