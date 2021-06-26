@@ -151,6 +151,8 @@ var adpc_control =
   let headElements = doc.head.children;
   if (headElements === undefined || headElements === null || headElements.length === 0)
    return;
+  if (doc.defaultView === undefined || doc.defaultView === null)
+   return;
   let wnd = null;
   for (let t = 0; t < gBrowser.browsers.length; t++)
   {
