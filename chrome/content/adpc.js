@@ -153,6 +153,8 @@ var adpc_control =
    return;
   if (doc.defaultView === undefined || doc.defaultView === null)
    return;
+  if (gBrowser.browsers === undefined || gBrowser.browsers === null || gBrowser.browsers.length === 0)
+   return;
   let wnd = null;
   for (let t = 0; t < gBrowser.browsers.length; t++)
   {
