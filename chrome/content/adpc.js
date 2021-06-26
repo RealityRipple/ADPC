@@ -116,17 +116,28 @@ var adpc_control =
   {
    hLink = null;
   }
-  if (hLink !== null)
+  if (hLink === null)
+   return;
+  let sURL = adpc_control.parseFromHeader(hLink);
+  if (sURL === false)
+   return;
+  if (gBrowser.browsers === undefined || gBrowser.browsers === null || gBrowser.browsers.length === 0)
+   return;
+  let wnd = null;
+  for (let t = 0; t < gBrowser.browsers.length; t++)
   {
-   let sURL = adpc_control.parseFromHeader(hLink);
-   if (sURL !== false)
+   let brw = gBrowser.browsers[t];
+   if (hResp.loadInfo.loadingContext === brw)
    {
-    if (sURL.slice(0, 1) === '/')
-     sURL = hResp.URI.prePath + sURL;
-    adpc_control.grabJSON(hResp.URI.asciiHost, sURL, hResp.loadInfo.loadingContext);
-    return;
+    wnd = brw;
+    break;
    }
   }
+  if (wnd === null)
+   return;
+  if (sURL.slice(0, 1) === '/')
+   sURL = hResp.URI.prePath + sURL;
+  adpc_control.grabJSON(hResp.URI.asciiHost, sURL, wnd);
  },
  handleDocCreated: function(wnd)
  {
