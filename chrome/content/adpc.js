@@ -78,7 +78,7 @@ var adpc_control =
   let nav = Components.utils.waiveXrays(wnd.navigator);
   let dpc = {};
   if (wnd === wnd.top)
-   dpc.request = function(consentRequestsList) { return adpc_control.dpcDialog(wnd, consentRequestsList); };
+   dpc.request = function(consentRequestsList) { return adpc_control.jsDialog(wnd, consentRequestsList); };
   else
    dpc.request = function(consentRequestsList) { return new wnd.Promise(async function(resolve, reject) { resolve({consent: [], withdraw: [], _object: []}); }); };
   let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
@@ -243,13 +243,13 @@ var adpc_control =
    let iWait = 3000;
    if (adpc_control.allAllowed() || adpc_control.allBlocked())
     iWait = 50;
-   setTimeout(adpc_control.showDoorhanger, iWait, list, host, wnd);
+   setTimeout(adpc_control.linkDoorhanger, iWait, wnd, host, list);
   }
   catch (ex)
   {
   }
  },
- showDoorhanger: async function(list, host, wnd)
+ linkDoorhanger: async function(wnd, host, list)
  {
   if (list.length === 0)
    return;
@@ -327,7 +327,7 @@ var adpc_control =
    {
     label: sDetails,
     accessKey: kDetails,
-    callback: async function() { await adpc_control.showDialog(wnd, host, list); }
+    callback: async function() { await adpc_control.linkDialog(wnd, host, list); }
    },
    [
     {
@@ -358,7 +358,7 @@ var adpc_control =
    }
   );
  },
- showDialog: async function(brw, host, actions)
+ linkDialog: async function(wnd, host, actions)
  {
   let retVals = [];
   for (let i = 0; i < actions.length; i++)
@@ -383,7 +383,7 @@ var adpc_control =
    let kAllow = locale.GetStringFromName('allow.accesskey');
    let sDeny = locale.GetStringFromName('deny.label');
    let kDeny = locale.GetStringFromName('deny.accesskey');
-   PopupNotifications.show(brw,
+   PopupNotifications.show(wnd,
     'adpc',
     sPermissionSng,
     null,
@@ -418,14 +418,14 @@ var adpc_control =
   let kAllowAll = locale.GetStringFromName('allow.all.accesskey');
   let sDenyAll = locale.GetStringFromName('deny.all.label');
   let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
-  PopupNotifications.show(brw,
+  PopupNotifications.show(wnd,
    'adpc',
    sPermissionPlr,
    null,
    {
     label: sDetails,
     accessKey: kDetails,
-    callback: async function() { await adpc_control.showDialog(brw, host, laters); }
+    callback: async function() { await adpc_control.linkDialog(wnd, host, laters); }
    },
    [
     {
@@ -456,7 +456,7 @@ var adpc_control =
    }
   );
  },
- dpcDialog: function(wnd, actions)
+ jsDialog: function(wnd, actions)
  {
   let p = new wnd.Promise(
    async function(resolve, reject)
@@ -464,9 +464,9 @@ var adpc_control =
     let ret = {consent: [], withdraw: [], _object: []};
     if (Array.isArray(actions))
     {
-     let uri = wnd.document.domain;
+     let host = wnd.document.domain;
      let retVals = [];
-     let prev = adpc_api.getHost(uri);
+     let prev = adpc_api.getHost(host);
      let jsPrompt = true;
      if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
       jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
@@ -490,10 +490,10 @@ var adpc_control =
        retVals.push({id: actions[i].id, text: actions[i].text, value: val});
      }
      if (retVals.length > 0)
-      window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', uri, retVals);
+      window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
      for (let i = 0; i < retVals.length; i++)
      {
-      await adpc_api.setConsent(uri, retVals[i].id, retVals[i].value, retVals[i].text);
+      await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
       if (retVals[i].value === 1)
        ret.consent.push(retVals[i].id);
       else if (retVals[i].value === 0)
@@ -503,7 +503,7 @@ var adpc_control =
      }
      for (let i = 0; i < resVals.length; i++)
      {
-      await adpc_api.setConsent(uri, resVals[i].id, resVals[i].value, resVals[i].text);
+      await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
       if (resVals[i].value === 1)
        ret.consent.push(resVals[i].id);
       else if (resVals[i].value === 0)
