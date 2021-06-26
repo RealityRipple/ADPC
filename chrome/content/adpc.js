@@ -243,13 +243,13 @@ var adpc_control =
    let iWait = 3000;
    if (adpc_control.allAllowed() || adpc_control.allBlocked())
     iWait = 50;
-   setTimeout(adpc_control.linkDoorhanger, iWait, wnd, host, list);
+   setTimeout(adpc_control.linkRequest, iWait, wnd, host, list);
   }
   catch (ex)
   {
   }
  },
- linkDoorhanger: async function(wnd, host, list)
+ linkRequest: async function(wnd, host, list)
  {
   if (list.length === 0)
    return;
@@ -269,6 +269,12 @@ var adpc_control =
    }
    return;
   }
+  adpc_control._doorhanger(wnd, host, list);
+ },
+ _doorhanger: async function(wnd, host, list)
+ {
+  if (list.length === 0)
+   return;
   if (host !== wnd.registeredOpenURI.asciiHost)
    return;
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
@@ -375,86 +381,7 @@ var adpc_control =
   }
   if (laters.length === 0)
    return;
-  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties'); 
-  if (laters.length === 1)
-  {
-   let sPermissionSng = locale.formatStringFromName('permission.single', [host, laters[0].text], 2);
-   let sAllow = locale.GetStringFromName('allow.label');
-   let kAllow = locale.GetStringFromName('allow.accesskey');
-   let sDeny = locale.GetStringFromName('deny.label');
-   let kDeny = locale.GetStringFromName('deny.accesskey');
-   PopupNotifications.show(wnd,
-    'adpc',
-    sPermissionSng,
-    null,
-    {
-     label: sAllow,
-     accessKey: kAllow,
-     callback: async function()
-     {
-      await adpc_api.setConsent(host, laters[0].id, 1, laters[i].text);
-     }
-    },
-    [
-     {
-      label: sDeny,
-      accessKey: kDeny,
-      callback: async function()
-      {
-       await adpc_api.setConsent(host, laters[0].id, 0, laters[i].text);
-      }
-     }
-    ],
-    {
-     learnMoreURL: 'https://www.dataprotectioncontrol.org/'
-    }
-   );
-   return;
-  }
-  let sPermissionPlr = locale.formatStringFromName('permission.plural', [host], 1);
-  let sDetails = locale.GetStringFromName('details.label');
-  let kDetails = locale.GetStringFromName('details.accesskey');
-  let sAllowAll = locale.GetStringFromName('allow.all.label');
-  let kAllowAll = locale.GetStringFromName('allow.all.accesskey');
-  let sDenyAll = locale.GetStringFromName('deny.all.label');
-  let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
-  PopupNotifications.show(wnd,
-   'adpc',
-   sPermissionPlr,
-   null,
-   {
-    label: sDetails,
-    accessKey: kDetails,
-    callback: async function() { await adpc_control.linkDialog(wnd, host, laters); }
-   },
-   [
-    {
-     label: sAllowAll,
-     accessKey: kAllowAll,
-     callback: async function()
-     {
-      for (let i = 0; i < laters.length; i++)
-      {
-       await adpc_api.setConsent(host, laters[i].id, 1, laters[i].text);
-      }
-     }
-    },
-    {
-     label: sDenyAll,
-     accessKey: kDenyAll,
-     callback: async function()
-     {
-      for (let i = 0; i < laters.length; i++)
-      {
-       await adpc_api.setConsent(host, laters[i].id, 0, laters[i].text);
-      }
-     }
-    }
-   ],
-   {
-    learnMoreURL: 'https://www.dataprotectioncontrol.org/spec/'
-   }
-  );
+  adpc_control._doorhanger(wnd, host, laters);
  },
  jsDialog: function(wnd, actions)
  {
