@@ -31,7 +31,7 @@
    <spacer flex="6" />
   </hbox>
   <hbox>
-   <checkbox id="chkJSPrompt" label="List previously selected choices if triggered by JavaScript" />
+   <checkbox id="chkJSPrompt" label="&jsPrompt.label;" />
   </hbox>
  </vbox>
  <spacer flex="1" />
