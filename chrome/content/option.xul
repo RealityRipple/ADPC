@@ -33,6 +33,9 @@
   <hbox>
    <checkbox id="chkJSPrompt" label="&jsPrompt.label;" />
   </hbox>
+  <hbox>
+   <checkbox id="chkSingleDoorhanger" label="&singleDoorhanger.label;" />
+  </hbox>
  </vbox>
  <spacer flex="1" />
  <groupbox flex="6">

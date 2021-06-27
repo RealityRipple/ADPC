@@ -278,7 +278,10 @@ var adpc_control =
   if (host !== wnd.registeredOpenURI.asciiHost)
    return;
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
-  if (list.length === 1)
+  let singleDoorhanger = false;
+  if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
+   singleDoorhanger = adpc_control._Prefs.getBoolPref('singleDoorhanger');
+  if (singleDoorhanger && list.length === 1)
   {
    let cleanText = list[0].text;
    cleanText = cleanText.replaceAll('"', '');

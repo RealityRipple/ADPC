@@ -15,6 +15,11 @@ var adpc_option =
    cJS.checked = adpc_option._Prefs.getBoolPref('jsPrompt');
   else
    cJS.checked = true;
+  let cSDH = document.getElementById('chkSingleDoorhanger');
+  if (adpc_option._Prefs.prefHasUserValue('singleDoorhanger'))
+   cSDH.checked = adpc_option._Prefs.getBoolPref('singleDoorhanger');
+  else
+   cSDH.checked = false;
   adpc_option.listHost();
  },
  listHost: async function()
@@ -230,6 +235,8 @@ var adpc_option =
   adpc_option._Prefs.setIntPref('forAll', cAll.value);
   let cJS = document.getElementById('chkJSPrompt');
   adpc_option._Prefs.setBoolPref('jsPrompt', cJS.checked);
+  let cSDH = document.getElementById('chkSingleDoorhanger');
+  adpc_option._Prefs.setBoolPref('singleDoorhanger', cSDH.checked);
   for (idx in adpc_option._prefList)
   {
    let val = adpc_option._prefList[idx];

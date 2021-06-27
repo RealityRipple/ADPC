@@ -4,6 +4,7 @@
 <!ENTITY all.allow "Accept">
 <!ENTITY all.block "Reject">
 <!ENTITY jsPrompt.label "List previously selected choices if triggered by JavaScript">
+<!ENTITY singleDoorhanger.label "Show site-provided description in single-choice doorhangers">
 <!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">
 <!ENTITY clearAllButton.label "Clear All Choices">
