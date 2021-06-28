@@ -10,6 +10,11 @@ var adpc_option =
    pAll = adpc_option._Prefs.getIntPref('forAll');
   let cAll = document.getElementById('cmbAll');
   cAll.value = pAll;
+  let cJSDH = document.getElementById('chkJSDoorhanger');
+  if (adpc_option._Prefs.prefHasUserValue('jsDoorhanger'))
+   cJSDH.checked = !adpc_option._Prefs.getBoolPref('jsDoorhanger');
+  else
+   cJSDH.checked = false;
   let cJSP = document.getElementById('chkJSPrompt');
   if (adpc_option._Prefs.prefHasUserValue('jsPrompt'))
    cJSP.checked = adpc_option._Prefs.getBoolPref('jsPrompt');
@@ -233,6 +238,8 @@ var adpc_option =
  {
   let cAll = document.getElementById('cmbAll');
   adpc_option._Prefs.setIntPref('forAll', cAll.value);
+  let cJSDH = document.getElementById('chkJSDoorhanger');
+  adpc_option._Prefs.setBoolPref('jsDoorhanger', !cJSDH.checked);
   let cJSP = document.getElementById('chkJSPrompt');
   adpc_option._Prefs.setBoolPref('jsPrompt', cJSP.checked);
   let cSDH = document.getElementById('chkSingleDoorhanger');

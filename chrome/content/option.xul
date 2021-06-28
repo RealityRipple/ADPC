@@ -31,13 +31,15 @@
    <spacer flex="6" />
   </hbox>
   <hbox>
+   <checkbox id="chkJSDoorhanger" label="&jsDoorhanger.label;" />
+  </hbox>
+  <hbox>
    <checkbox id="chkJSPrompt" label="&jsPrompt.label;" />
   </hbox>
   <hbox>
    <checkbox id="chkSingleDoorhanger" label="&singleDoorhanger.label;" />
   </hbox>
  </vbox>
- <spacer flex="1" />
  <groupbox flex="6">
   <caption><description value="&host.label;" /><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
   <vbox flex="1" id="lstScroll">
