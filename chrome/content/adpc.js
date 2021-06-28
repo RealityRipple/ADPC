@@ -232,48 +232,48 @@ var adpc_control =
    let txt = await ret.json();
    if (!txt.hasOwnProperty('consentRequests'))
     return;
-   let list = [];
+   let actions = [];
    for (let i = 0; i < txt.consentRequests.length; i++)
    {
     let c = await adpc_api.getConsent(host, txt.consentRequests[i].id);
     if (c !== -1)
      continue;
-    list.push(txt.consentRequests[i]);
+    actions.push(txt.consentRequests[i]);
    }
    let iWait = 3000;
    if (adpc_control.allAllowed() || adpc_control.allBlocked())
     iWait = 50;
-   setTimeout(adpc_control.linkRequest, iWait, wnd, host, list);
+   setTimeout(adpc_control.linkRequest, iWait, wnd, host, actions);
   }
   catch (ex)
   {
   }
  },
- linkRequest: async function(wnd, host, list)
+ linkRequest: async function(wnd, host, actions)
  {
-  if (list.length === 0)
+  if (actions.length === 0)
    return;
   if (adpc_control.allAllowed())
   {
-   for (let i = 0; i < list.length; i++)
+   for (let i = 0; i < actions.length; i++)
    {
-    await adpc_api.setConsent(host, list[i].id, -1, list[i].text);
+    await adpc_api.setConsent(host, actions[i].id, -1, actions[i].text);
    }
    return;
   }
   if (adpc_control.allBlocked())
   {
-   for (let i = 0; i < list.length; i++)
+   for (let i = 0; i < actions.length; i++)
    {
-    await adpc_api.setConsent(host, list[i].id, -1, list[i].text);
+    await adpc_api.setConsent(host, actions[i].id, -1, actions[i].text);
    }
    return;
   }
-  adpc_control._doorhanger(wnd, host, list);
+  adpc_control._linkDoorhanger(wnd, host, actions);
  },
- _doorhanger: async function(wnd, host, list)
+ _linkDoorhanger: async function(wnd, host, actions)
  {
-  if (list.length === 0)
+  if (actions.length === 0)
    return;
   if (host !== wnd.registeredOpenURI.asciiHost)
    return;
@@ -281,9 +281,9 @@ var adpc_control =
   let singleDoorhanger = false;
   if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
    singleDoorhanger = adpc_control._Prefs.getBoolPref('singleDoorhanger');
-  if (singleDoorhanger && list.length === 1)
+  if (singleDoorhanger && actions.length === 1)
   {
-   let cleanText = list[0].text;
+   let cleanText = actions[0].text;
    cleanText = cleanText.replaceAll('"', '');
    while (cleanText.includes('\'\''))
    {
@@ -303,7 +303,7 @@ var adpc_control =
      accessKey: kAllow,
      callback: async function()
      {
-      await adpc_api.setConsent(host, list[0].id, 1, list[0].text);
+      await adpc_api.setConsent(host, actions[0].id, 1, actions[0].text);
      }
     },
     [
@@ -312,7 +312,7 @@ var adpc_control =
       accessKey: kDeny,
       callback: async function()
       {
-       await adpc_api.setConsent(host, list[0].id, 0, list[0].text);
+       await adpc_api.setConsent(host, actions[0].id, 0, actions[0].text);
       }
      }
     ],
@@ -336,7 +336,7 @@ var adpc_control =
    {
     label: sDetails,
     accessKey: kDetails,
-    callback: async function() { await adpc_control.linkDialog(wnd, host, list); }
+    callback: async function() { await adpc_control._linkDialog(wnd, host, actions); }
    },
    [
     {
@@ -344,9 +344,9 @@ var adpc_control =
      accessKey: kAllowAll,
      callback: async function()
      {
-      for (let i = 0; i < list.length; i++)
+      for (let i = 0; i < actions.length; i++)
       {
-       await adpc_api.setConsent(host, list[i].id, 1, list[i].text);
+       await adpc_api.setConsent(host, actions[i].id, 1, actions[i].text);
       }
      }
     },
@@ -355,9 +355,9 @@ var adpc_control =
      accessKey: kDenyAll,
      callback: async function()
      {
-      for (let i = 0; i < list.length; i++)
+      for (let i = 0; i < actions.length; i++)
       {
-       await adpc_api.setConsent(host, list[i].id, 0, list[i].text);
+       await adpc_api.setConsent(host, actions[i].id, 0, actions[i].text);
       }
      }
     }
@@ -367,7 +367,7 @@ var adpc_control =
    }
   );
  },
- linkDialog: async function(wnd, host, actions)
+ _linkDialog: async function(wnd, host, actions)
  {
   let retVals = [];
   for (let i = 0; i < actions.length; i++)
@@ -384,7 +384,7 @@ var adpc_control =
   }
   if (laters.length === 0)
    return;
-  adpc_control._doorhanger(wnd, host, laters);
+  adpc_control._linkDoorhanger(wnd, host, laters);
  },
  jsDialog: function(wnd, actions)
  {
