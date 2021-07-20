@@ -13,6 +13,8 @@ var adpc_pageInfo =
   let sHost = ioService.newURI(uri);
   adpc_pageInfo._host = sHost.asciiHost;
   let prefs = await adpc_api.getHost(adpc_pageInfo._host);
+  if (prefs === null)
+   return;
   for (pref in prefs)
   {
    let lbl = await adpc_api.getLabel(adpc_pageInfo._host, pref);

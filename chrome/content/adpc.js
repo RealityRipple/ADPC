@@ -448,8 +448,11 @@ var adpc_control =
     for (let i = 0; i < actions.length; i++)
     {
      let val = -1;
-     if (actions[i].id in prev)
-      val = prev[actions[i].id];
+     if (prev !== null)
+     {
+      if (actions[i].id in prev)
+       val = prev[actions[i].id];
+     }
      if (!jsPrompt)
      {
       if (val !== -1)
@@ -709,8 +712,11 @@ var adpc_control =
   for (let i = 0; i < actions.length; i++)
   {
    let val = -1;
-   if (actions[i].id in prev)
-    val = prev[actions[i].id];
+   if (prev !== null)
+   {
+    if (actions[i].id in prev)
+     val = prev[actions[i].id];
+   }
    if (!jsPrompt)
    {
     if (val !== -1)
