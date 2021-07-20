@@ -75,16 +75,13 @@ var adpc_control =
    return;
   if (!(wnd.navigator instanceof Navigator))
    return;
-  let nav = Components.utils.waiveXrays(wnd.navigator);
   let host = wnd.document.domain;
   let dpc = {};
   if (wnd === wnd.top)
-   dpc.request = function(consentRequestsList) { return adpc_control.jsRequest(wnd, host, consentRequestsList); };
+   dpc = { request: function(consentRequestsList) { return new wnd.wrappedJSObject.Promise(Components.utils.exportFunction(function(resolve, reject) { adpc_control.jsRequest(wnd, host, consentRequestsList).then(reqRet => { resolve(Components.utils.cloneInto(reqRet, wnd.wrappedJSObject)); } ); }, wnd.wrappedJSObject)); } };
   else
-   dpc.request = function(consentRequestsList) { return new wnd.Promise(async function(resolve, reject) { resolve({consent: [], withdraw: [], _object: []}); }); };
-  let dpclone = Components.utils.cloneInto(dpc, nav, {cloneFunctions: true});
-  nav.dataProtectionControl = dpclone;
-  Components.utils.unwaiveXrays(nav);
+   dpc = { request: function(consentRequestsList) { return new wnd.wrappedJSObject.Promise(Components.utils.exportFunction(function(resolve, reject) { resolve(Components.utils.cloneInto( { consent: [], withdraw: [], _object: [] }, wnd.wrappedJSObject)); },wnd.wrappedJSObject)); } };
+  wnd.navigator.wrappedJSObject.dataProtectionControl = Components.utils.cloneInto(dpc, wnd.wrappedJSObject, {cloneFunctions: true});
  },
  handleDocInserted: function(doc)
  {
@@ -274,7 +271,7 @@ var adpc_control =
  },
  jsRequest: function (wnd, host, actions)
  {
-  let p = new wnd.Promise(
+  let p = new Promise(
    async function(resolve, reject)
    {
     let blankRet = {consent: [], withdraw: [], _object: []};
