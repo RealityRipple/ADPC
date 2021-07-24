@@ -5,21 +5,21 @@ var adpc_option =
  _prefList: null,
  init: function()
  {
-  let pAll = 0;
-  if (adpc_option._Prefs.prefHasUserValue('forAll'))
-   pAll = adpc_option._Prefs.getIntPref('forAll');
-  let cAll = document.getElementById('cmbAll');
-  cAll.value = pAll;
-  let cJSDH = document.getElementById('chkJSDoorhanger');
-  if (adpc_option._Prefs.prefHasUserValue('jsDoorhanger'))
-   cJSDH.checked = !adpc_option._Prefs.getBoolPref('jsDoorhanger');
+  let pAll = false;
+  if (adpc_option._Prefs.prefHasUserValue('blockAll'))
+   pAll = adpc_option._Prefs.getBoolPref('blockAll');
+  let cAll = document.getElementById('chkBlockAll');
+  cAll.checked = pAll;
+  let pObject = '';
+  if (adpc_option._Prefs.prefHasUserValue('objectTo'))
+   pObject = adpc_option._Prefs.getCharPref('objectTo');
+  let aObject = [];
+  if (pObject.indexOf(' ') === -1)
+   aObject.push(pObject);
   else
-   cJSDH.checked = false;
-  let cJSP = document.getElementById('chkJSPrompt');
-  if (adpc_option._Prefs.prefHasUserValue('jsPrompt'))
-   cJSP.checked = adpc_option._Prefs.getBoolPref('jsPrompt');
-  else
-   cJSP.checked = true;
+   aObject = pObject.split(' ');
+  let cDM = document.getElementById('chkDirectMarketing');
+  cDM.checked = aObject.includes('direct-marketing');
   let cSDH = document.getElementById('chkSingleDoorhanger');
   if (adpc_option._Prefs.prefHasUserValue('singleDoorhanger'))
    cSDH.checked = adpc_option._Prefs.getBoolPref('singleDoorhanger');
@@ -236,12 +236,13 @@ var adpc_option =
  },
  save: async function()
  {
-  let cAll = document.getElementById('cmbAll');
-  adpc_option._Prefs.setIntPref('forAll', cAll.value);
-  let cJSDH = document.getElementById('chkJSDoorhanger');
-  adpc_option._Prefs.setBoolPref('jsDoorhanger', !cJSDH.checked);
-  let cJSP = document.getElementById('chkJSPrompt');
-  adpc_option._Prefs.setBoolPref('jsPrompt', cJSP.checked);
+  let cAll = document.getElementById('chkBlockAll');
+  adpc_option._Prefs.setBoolPref('blockAll', cAll.checked);
+  let cDM = document.getElementById('chkDirectMarketing');
+  let aObject = [];
+  if (cDM.checked)
+   aObject.push('direct-marketing');
+  adpc_option._Prefs.setCharPref('objectTo', aObject.join(' '));
   let cSDH = document.getElementById('chkSingleDoorhanger');
   adpc_option._Prefs.setBoolPref('singleDoorhanger', cSDH.checked);
   for (idx in adpc_option._prefList)

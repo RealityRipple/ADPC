@@ -1,10 +1,7 @@
 <!ENTITY dialog.title "ADPC Preferences">
-<!ENTITY all.label "Default response:">
-<!ENTITY all.none "Unset">
-<!ENTITY all.allow "Accept">
-<!ENTITY all.block "Reject">
-<!ENTITY jsDoorhanger.label "Show a dialog box rather than a doorhanger if triggered by JavaScript">
-<!ENTITY jsPrompt.label "List previously selected choices if triggered by JavaScript">
+<!ENTITY blockAll.label "Automatically reject all requests">
+<!ENTITY directMarketing.label "Object to direct marketing">
+<!ENTITY directMarketing.details "Article 21(2) GDPR">
 <!ENTITY singleDoorhanger.label "Show site-provided description in single-choice doorhangers">
 <!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">

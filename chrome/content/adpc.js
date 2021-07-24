@@ -9,6 +9,58 @@ var adpc_control =
   observerService.addObserver(adpc_control.eventObserver, 'http-on-examine-response', false);
   observerService.addObserver(adpc_control.eventObserver, 'content-document-global-created', false);
   observerService.addObserver(adpc_control.eventObserver, 'document-element-inserted', false);
+  Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefBranch).addObserver('extensions.adpc.objectTo', adpc_control.prefObserver, false);
+ },
+ prefObserver:
+ {
+  observe: function(aSubject, aTopic, aData)
+  {
+   let otList = false;
+   if (adpc_control._Prefs.prefHasUserValue('objectTo'))
+    otList = adpc_control._Prefs.getCharPref('objectTo').split(' ');
+   let mdtr = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
+   let brw = mdtr.getEnumerator('navigator:browser');
+   while (brw.hasMoreElements())
+   {
+    let inst = brw.getNext();
+    let gw = inst.gBrowser;
+    for (let i = 0; i < gw.browsers.length; i++)
+    {
+     let bri = gw.getBrowserAtIndex(i);
+     let wnd = bri.contentWindow;
+     if (wnd !== wnd.top)
+      continue;
+     if (wnd.navigator.wrappedJSObject === undefined)
+      continue;
+     if (wnd.navigator.wrappedJSObject.dataProtectionControl === undefined)
+      continue;
+     let decisions = {};
+     let prev = adpc_api.getHost(bri.currentURI.asciiHost);
+     if (prev !== null)
+     {
+      for (n in prev)
+      {
+       if (prev[n] === 1)
+       {
+        if (!decisions.hasOwnProperty('consent'))
+         decisions.consent = [];
+        decisions.consent.push(n);
+       }
+       else
+       {
+        if (!decisions.hasOwnProperty('withdraw'))
+         decisions.withdraw = [];
+        decisions.withdraw.push(n);
+       }
+      }
+     }
+     if (adpc_control._Prefs.prefHasUserValue('objectTo'))
+      decisions.object = adpc_control._Prefs.getCharPref('objectTo').split(' ');
+     let evt = new wnd.CustomEvent('decisionchange', {detail: decisions});
+     wnd.navigator.wrappedJSObject.dataProtectionControl.dispatchEvent(evt);
+    }
+   }
+  }
  },
  handleOnModifyRequest: function(hChan)
  {
@@ -78,10 +130,99 @@ var adpc_control =
   let host = wnd.document.domain;
   let dpc = {};
   if (wnd === wnd.top)
-   dpc = { request: function(consentRequestsList) { return new wnd.wrappedJSObject.Promise(Components.utils.exportFunction(function(resolve, reject) { adpc_control.jsRequest(wnd, host, consentRequestsList).then(reqRet => { resolve(Components.utils.cloneInto(reqRet, wnd.wrappedJSObject)); } ); }, wnd.wrappedJSObject)); } };
+  {
+   dpc =
+   {
+    request: function(consentRequestsList)
+    {
+     return new wnd.wrappedJSObject.Promise
+     (
+      Components.utils.exportFunction
+      (
+       function(resolve, reject)
+       {
+        adpc_control.jsRequest(wnd, host, consentRequestsList).then
+        (
+         reqRet =>
+         {
+          if (adpc_control._Prefs.prefHasUserValue('objectTo'))
+           reqRet.object = adpc_control._Prefs.getCharPref('objectTo').split(' ');
+          resolve(Components.utils.cloneInto(reqRet, wnd.wrappedJSObject));
+         }
+        );
+       }, wnd.wrappedJSObject
+      )
+     );
+    }
+   };
+  }
   else
-   dpc = { request: function(consentRequestsList) { return new wnd.wrappedJSObject.Promise(Components.utils.exportFunction(function(resolve, reject) { resolve(Components.utils.cloneInto( { consent: [], withdraw: [], _object: [] }, wnd.wrappedJSObject)); },wnd.wrappedJSObject)); } };
+   dpc = { request: function(consentRequestsList) { return new wnd.wrappedJSObject.Promise(Components.utils.exportFunction(function(resolve, reject) { resolve(Components.utils.cloneInto( { }, wnd.wrappedJSObject)); }, wnd.wrappedJSObject)); } };
+  dpc.listeners = {};
+  dpc.addEventListener = Components.utils.exportFunction(function(type, listener, options)
+  {
+   let o = {};
+   if (options === true || options === false)
+    o.capture = options;
+   else
+    o = options;
+   let scr = 'if (globalThis.AdpcEvent === undefined)\n';
+   scr+= '{\n';
+   scr+= ' class AdpcEvent extends Event\n';
+   scr+= ' {\n';
+   scr+= '  constructor(type, options)\n';
+   scr+= '  {\n';
+   scr+= '   super(type);\n';
+   scr+= '   this.userDecisions = options;\n';
+   scr+= '  }\n';
+   scr+= ' }\n';
+   scr+= ' globalThis.AdpcEvent = AdpcEvent;\n';
+   scr+= '}';
+   adpc_control.executePageScript(wnd.document, scr);
+   if (!(type in dpc.listeners))
+    dpc.listeners[type] = [];
+   dpc.listeners[type].push(listener);
+  }, wnd.wrappedJSObject);
+  dpc.removeEventListener = Components.utils.exportFunction(function(type, listener, options)
+  {
+   let o = {};
+   if (options === true || options === false)
+    o.capture = options;
+   else
+    o = options;
+   
+   if (!(type in dpc.listeners))
+    return;
+   let stack = dpc.listeners[type];
+   for (let i = 0, l = stack.length; i < l; i++)
+   {
+    if (stack[i] === listener)
+    {
+     stack.splice(i, 1);
+     return;
+    }
+   }
+  }, wnd.wrappedJSObject);
+  dpc.dispatchEvent = Components.utils.exportFunction(function(event)
+  {
+   if (!(event.type in dpc.listeners))
+    return true;
+   let stack = dpc.listeners[event.type].slice();
+   for (let i = 0, l = stack.length; i < l; i++)
+   {
+    let nEvt = new wnd.wrappedJSObject.AdpcEvent(event.type, Components.utils.cloneInto(event.detail, wnd.wrappedJSObject));
+    stack[i].call(dpc, nEvt);
+   }
+   return !event.defaultPrevented;
+  }, wnd.wrappedJSObject);
   wnd.navigator.wrappedJSObject.dataProtectionControl = Components.utils.cloneInto(dpc, wnd.wrappedJSObject, {cloneFunctions: true});
+ },
+ executePageScript: function(doc, script)
+ {
+  let eScr = doc.createElement('script');
+  eScr.textContent = script;
+  doc.head.appendChild(eScr);
+  eScr.remove();
  },
  handleDocInserted: function(doc)
  {
@@ -239,7 +380,7 @@ var adpc_control =
     actions.push(txt.consentRequests[i]);
    }
    let iWait = 3000;
-   if (adpc_control.allAllowed() || adpc_control.allBlocked())
+   if (adpc_control.allBlocked())
     iWait = 50;
    setTimeout(adpc_control.linkRequest, iWait, wnd, host, actions);
   }
@@ -251,14 +392,6 @@ var adpc_control =
  {
   if (actions.length === 0)
    return;
-  if (adpc_control.allAllowed())
-  {
-   for (let i = 0; i < actions.length; i++)
-   {
-    await adpc_api.setConsent(host, actions[i].id, -1, actions[i].text);
-   }
-   return;
-  }
   if (adpc_control.allBlocked())
   {
    for (let i = 0; i < actions.length; i++)
@@ -274,7 +407,7 @@ var adpc_control =
   let p = new Promise(
    async function(resolve, reject)
    {
-    let blankRet = {consent: [], withdraw: [], _object: []};
+    let blankRet = {};
     if (!Array.isArray(actions))
     {
      resolve(blankRet);
@@ -285,19 +418,8 @@ var adpc_control =
      resolve(blankRet);
      return;
     }
-    let showDH = true;
-    if (adpc_control._Prefs.prefHasUserValue('jsDoorhanger'))
-     showDH = adpc_control._Prefs.getBoolPref('jsDoorhanger');
-    if (showDH)
-    {
-     let dhRet = await adpc_control._jsDoorhanger(wnd, host, actions);
-     resolve(dhRet);
-    }
-    else
-    {
-     let dlgRet = await adpc_control._jsDialog(wnd, host, actions);
-     resolve(dlgRet);
-    }
+    let dhRet = await adpc_control._jsDoorhanger(wnd, host, actions);
+    resolve(dhRet);
    }
   );
   return p;
@@ -439,9 +561,6 @@ var adpc_control =
     if (host !== wnd.registeredOpenURI.asciiHost)
      return;
     let prev = adpc_api.getHost(host);
-    let jsPrompt = true;
-    if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
-     jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
     let retVals = [];
     let remVals = [];
     let resVals = [];
@@ -453,42 +572,28 @@ var adpc_control =
       if (actions[i].id in prev)
        val = prev[actions[i].id];
      }
-     if (!jsPrompt)
-     {
-      if (val !== -1)
-       remVals.push({id: actions[i].id, text: actions[i].text, value: val});
-      else if (adpc_control.allAllowed() || adpc_control.allBlocked())
-       resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
-      else
-       retVals.push({id: actions[i].id, text: actions[i].text, value: val});
-     }
+     if (val !== -1)
+      remVals.push({id: actions[i].id, text: actions[i].text, value: val});
+     else if (adpc_control.allBlocked())
+      resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
      else
-     {
-      if (adpc_control.allAllowed() || adpc_control.allBlocked())
-       resVals.push({id: actions[i].id, text: actions[i].text, value: val});
-      else
-       retVals.push({id: actions[i].id, text: actions[i].text, value: val});
-     }
+      retVals.push({id: actions[i].id, text: actions[i].text, value: val});
     }
     if (retVals.length === 0)
     {
-     let ret = {consent: [], withdraw: [], _object: []};
+     let ret = {consent: [], withdraw: []};
      for (let i = 0; i < resVals.length; i++)
      {
       await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
-      if (resVals[i].value === 1 || adpc_control.allAllowed())
+      if (!adpc_control.allBlocked() && resVals[i].value === 1)
        ret.consent.push(resVals[i].id);
-      else if (resVals[i].value === 0 || adpc_control.allBlocked())
-       ret._object.push(resVals[i].id);
-      else
+      else 
        ret.withdraw.push(resVals[i].id);
      }
      for (let i = 0; i < remVals.length; i++)
      {
       if (remVals[i].value === 1)
        ret.consent.push(remVals[i].id);
-      else if (remVals[i].value === 0)
-       ret._object.push(remVals[i].id);
       else
        ret.withdraw.push(remVals[i].id);
      }
@@ -522,14 +627,12 @@ var adpc_control =
        callback: async function()
        {
         retVals[0].value = 1;
-        let ret = {consent: [], withdraw: [], _object: []};
+        let ret = {consent: [], withdraw: []};
         for (let i = 0; i < retVals.length; i++)
         {
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
          if (retVals[i].value === 1)
           ret.consent.push(retVals[i].id);
-         else if (retVals[i].value === 0)
-          ret._object.push(retVals[i].id);
          else
           ret.withdraw.push(retVals[i].id);
         }
@@ -538,8 +641,6 @@ var adpc_control =
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
           ret.consent.push(resVals[i].id);
-         else if (resVals[i].value === 0)
-          ret._object.push(resVals[i].id);
          else
           ret.withdraw.push(resVals[i].id);
         }
@@ -547,8 +648,6 @@ var adpc_control =
         {
          if (remVals[i].value === 1)
           ret.consent.push(remVals[i].id);
-         else if (remVals[i].value === 0)
-          ret._object.push(remVals[i].id);
          else
           ret.withdraw.push(remVals[i].id);
         }
@@ -562,14 +661,12 @@ var adpc_control =
         callback: async function()
         {
          retVals[0].value = 0;
-         let ret = {consent: [], withdraw: [], _object: []};
+         let ret = {consent: [], withdraw: []};
          for (let i = 0; i < retVals.length; i++)
          {
           await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
           if (retVals[i].value === 1)
            ret.consent.push(retVals[i].id);
-          else if (retVals[i].value === 0)
-           ret._object.push(retVals[i].id);
           else
            ret.withdraw.push(retVals[i].id);
          }
@@ -578,8 +675,6 @@ var adpc_control =
           await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
           if (resVals[i].value === 1)
            ret.consent.push(resVals[i].id);
-          else if (resVals[i].value === 0)
-           ret._object.push(resVals[i].id);
           else
            ret.withdraw.push(resVals[i].id);
          }
@@ -587,8 +682,6 @@ var adpc_control =
          {
           if (remVals[i].value === 1)
            ret.consent.push(remVals[i].id);
-          else if (remVals[i].value === 0)
-           ret._object.push(remVals[i].id);
           else
            ret.withdraw.push(remVals[i].id);
          }
@@ -628,7 +721,7 @@ var adpc_control =
        accessKey: kAllowAll,
        callback: async function()
        {
-        let ret = {consent: [], withdraw: [], _object: []};
+        let ret = {consent: [], withdraw: []};
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 1;
@@ -640,8 +733,6 @@ var adpc_control =
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
           ret.consent.push(resVals[i].id);
-         else if (resVals[i].value === 0)
-          ret._object.push(resVals[i].id);
          else
           ret.withdraw.push(resVals[i].id);
         }
@@ -649,8 +740,6 @@ var adpc_control =
         {
          if (remVals[i].value === 1)
           ret.consent.push(remVals[i].id);
-         else if (remVals[i].value === 0)
-          ret._object.push(remVals[i].id);
          else
           ret.withdraw.push(remVals[i].id);
         }
@@ -662,20 +751,18 @@ var adpc_control =
        accessKey: kDenyAll,
        callback: async function()
        {
-        let ret = {consent: [], withdraw: [], _object: []};
+        let ret = {consent: [], withdraw: []};
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 0;
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
-         ret._object.push(retVals[i].id);
+         ret.withdraw.push(retVals[i].id);
         }
         for (let i = 0; i < resVals.length; i++)
         {
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
           ret.consent.push(resVals[i].id);
-         else if (resVals[i].value === 0)
-          ret._object.push(resVals[i].id);
          else
           ret.withdraw.push(resVals[i].id);
         }
@@ -683,8 +770,6 @@ var adpc_control =
         {
          if (remVals[i].value === 1)
           ret.consent.push(remVals[i].id);
-         else if (remVals[i].value === 0)
-          ret._object.push(remVals[i].id);
          else
           ret.withdraw.push(remVals[i].id);
         }
@@ -703,9 +788,6 @@ var adpc_control =
  _jsDialog: async function(wnd, host, actions)
  {
   let prev = adpc_api.getHost(host);
-  let jsPrompt = true;
-  if (adpc_control._Prefs.prefHasUserValue('jsPrompt'))
-   jsPrompt = adpc_control._Prefs.getBoolPref('jsPrompt');
   let retVals = [];
   let remVals = [];
   let resVals = [];
@@ -717,28 +799,25 @@ var adpc_control =
     if (actions[i].id in prev)
      val = prev[actions[i].id];
    }
-   if (!jsPrompt)
-   {
-    if (val !== -1)
-     remVals.push({id: actions[i].id, text: actions[i].text, value: val});
-    else if (adpc_control.allAllowed() || adpc_control.allBlocked())
-     resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
-    else
-     retVals.push({id: actions[i].id, text: actions[i].text, value: val});
-   }
+   if (val !== -1)
+    remVals.push({id: actions[i].id, text: actions[i].text, value: val});
+   else if (adpc_control.allBlocked())
+    resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
    else
     retVals.push({id: actions[i].id, text: actions[i].text, value: val});
   }
   if (retVals.length > 0)
    window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
-  let ret = {consent: [], withdraw: [], _object: []};
+  let ret = {consent: [], withdraw: []};
   for (let i = 0; i < retVals.length; i++)
   {
    await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
    if (retVals[i].value === 1)
+   {
+    if (!ret.hasOwnProperty('consent'))
+     ret.consent = [];
     ret.consent.push(retVals[i].id);
-   else if (retVals[i].value === 0)
-    ret._object.push(retVals[i].id);
+   }
    else
     ret.withdraw.push(retVals[i].id);
   }
@@ -747,8 +826,6 @@ var adpc_control =
    await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
    if (resVals[i].value === 1)
     ret.consent.push(resVals[i].id);
-   else if (resVals[i].value === 0)
-    ret._object.push(resVals[i].id);
    else
     ret.withdraw.push(resVals[i].id);
   }
@@ -756,8 +833,6 @@ var adpc_control =
   {
    if (remVals[i].value === 1)
     ret.consent.push(remVals[i].id);
-   else if (remVals[i].value === 0)
-    ret._object.push(remVals[i].id);
    else
     ret.withdraw.push(remVals[i].id);
   }
@@ -765,44 +840,30 @@ var adpc_control =
  },
  makeHeader: function(hList)
  {
-  let sObject = '';
   let sConsent = '';
   for (id in hList)
   {
-   if (adpc_control.allAllowed() || hList[id] === 1)
+   if (!adpc_control.allBlocked() && hList[id] === 1)
    {
     if (sConsent === '')
      sConsent = id;
     else
      sConsent += ' ' + id;
    }
-   else if (adpc_control.allBlocked() || hList[id] === 0)
-   {
-    if (sObject === '')
-     sObject = id;
-    else
-     sObject += ' ' + id;
-   }
   }
   let hdr = 'withdraw=*';
-  if (sObject !== '')
-   hdr += ', object="' + sObject + '"';
+  if (adpc_control._Prefs.prefHasUserValue('objectTo'))
+   hdr += ', object="' + adpc_control._Prefs.getCharPref('objectTo') + '"';
   if (sConsent !== '')
    hdr += ', consent="' + sConsent + '"';
   if (hdr === 'withdraw=*')
    return false;
   return hdr;
  },
- allAllowed: function()
- {
-  if (adpc_control._Prefs.prefHasUserValue('forAll'))
-   return (adpc_control._Prefs.getIntPref('forAll') === 1);
-  return false;
- },
  allBlocked: function()
  {
-  if (adpc_control._Prefs.prefHasUserValue('forAll'))
-   return (adpc_control._Prefs.getIntPref('forAll') === -1);
+  if (adpc_control._Prefs.prefHasUserValue('blockAll'))
+   return adpc_control._Prefs.getBoolPref('blockAll');
   return false;
  }
 };

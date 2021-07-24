@@ -150,6 +150,18 @@ var adpc_api =
   }
   return rList;
  },
+ getHostsFromIDX: function(idx)
+ {
+  let lRows = adpc_api._read_sync(adpc_api._dbURLList, 'SELECT url FROM ' + adpc_api._dbURLList + ' WHERE id = :id', {'id': idx}, ['url']);
+  if (lRows === null)
+   return [];
+  let rList = [];
+  for (let i = 0; i < lRows.length; i++)
+  {
+   rList.push(lRows[i].url);
+  }
+  return rList;
+ },
  isStandardID: function(name)
  {
   if (name.slice(0, 7) === 'http://')
@@ -270,6 +282,12 @@ var adpc_api =
  setConsent: async function(host, name, val, label)
  {
   let idx = await adpc_api.getConsentID(host, name);
+  if (idx !== null)
+  {
+   let oldVal = await adpc_api.getConsent(host, name);
+   if (val === oldVal)
+    return idx;
+  }
   if (adpc_api.isStandardID(name))
   {
    if (idx === null)
@@ -281,6 +299,7 @@ var adpc_api =
     let stdInsertURL = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
     if (!stdInsertURL)
      return false;
+    adpc_api._consentEvent(host);
     return idx;
    }
    let stdUpdateID = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?2 WHERE idx = ?1', [idx, val]);
@@ -302,6 +321,7 @@ var adpc_api =
       return false;
     }
    }
+   adpc_api._consentEvent(host);
    return idx;
   }
   if (idx !== null)
@@ -315,6 +335,7 @@ var adpc_api =
     if (!updateURL)
      return false;
    }
+   adpc_api._consentEvent(host);
    return idx;
   }
   idx = await adpc_api.makeConsentID();
@@ -324,13 +345,22 @@ var adpc_api =
   let insertURL = await adpc_api._write(adpc_api._dbURLList, 'INSERT INTO ' + adpc_api._dbURLList + ' (url, id, text) VALUES (?1, ?2, ?3)', [host, idx, label]);
   if (!insertURL)
    return false;
+  adpc_api._consentEvent(host);
   return idx;
  },
  setConsentByIDX: async function(idx, val)
  {
+  let oldVal = await adpc_api.getConsentFromIDX(idx);
+  if (oldVal.value === val)
+   return idx;
   let ret = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
   if (!ret)
    return false;
+  let hosts = adpc_api.getHostsFromIDX(idx);
+  for (let i = 0; i < hosts.length; i++)
+  {
+   adpc_api._consentEvent(hosts[i]);
+  }
   return idx;
  },
  withdrawConsent: async function(host, name)
@@ -342,12 +372,14 @@ var adpc_api =
    {
     await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE id = ?1', [idx]);
     await adpc_api._write(adpc_api._dbIDList, 'DELETE FROM ' + adpc_api._dbIDList + ' WHERE idx = ?1', [idx]);
+    adpc_api._consentEvent(host);
     return;   
    }
   }
   let lRows = await adpc_api._read(adpc_api._dbURLList, 'SELECT id FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id']);
   if (lRows === null)
    return;
+  let changed = false;
   for (let i = 0; i < lRows.length; i++)
   {
    let idx = lRows[i].id;
@@ -360,6 +392,55 @@ var adpc_api =
    {
     await adpc_api._write(adpc_api._dbIDList, 'DELETE FROM ' + adpc_api._dbIDList + ' WHERE idx = ?1', [idx]);
     await adpc_api._write(adpc_api._dbURLList, 'DELETE FROM ' + adpc_api._dbURLList + ' WHERE url = ?1 AND id = ?2', [host, idx]);
+    changed = true;
+   }
+  }
+  if (changed)
+   adpc_api._consentEvent(host);
+ },
+ _consentEvent: function(host)
+ {
+  let mdtr = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
+  let brw = mdtr.getEnumerator('navigator:browser');
+  while (brw.hasMoreElements())
+  {
+   let inst = brw.getNext();
+   let gw = inst.gBrowser;
+   for (let i = 0; i < gw.browsers.length; i++)
+   {
+    let bri = gw.getBrowserAtIndex(i);
+    let wnd = bri.contentWindow;
+    if (wnd !== wnd.top)
+     continue;
+    if (bri.currentURI.asciiHost !== host)
+     continue;
+    if (wnd.navigator.wrappedJSObject.dataProtectionControl === undefined)
+     continue;
+    let decisions = {};
+    let prev = adpc_api.getHost(host);
+    if (prev !== null)
+    {
+     for (n in prev)
+     {
+      if (prev[n] === 1)
+      {
+       if (!decisions.hasOwnProperty('consent'))
+        decisions.consent = [];
+       decisions.consent.push(n);
+      }
+      else
+      {
+       if (!decisions.hasOwnProperty('withdraw'))
+        decisions.withdraw = [];
+       decisions.withdraw.push(n);
+      }
+     }
+    }
+    let prefs = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getBranch('extensions.adpc.');
+    if (prefs.prefHasUserValue('objectTo'))
+     decisions.object = prefs.getCharPref('objectTo').split(' ');
+    let evt = new wnd.CustomEvent('decisionchange', {detail: decisions});
+    wnd.navigator.wrappedJSObject.dataProtectionControl.dispatchEvent(evt);
    }
   }
  }

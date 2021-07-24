@@ -18,30 +18,21 @@
  <script type="application/x-javascript" src="chrome://adpc/content/api.js"/>
  <script type="application/x-javascript" src="chrome://adpc/content/option.js"/>
  <vbox>
-  <hbox flex="1">
-   <label control="cmbAll" value="&all.label;" />
+  <hbox>
+   <checkbox id="chkBlockAll" label="&blockAll.label;" />
+  </hbox>
+  <hbox flex="1" align="baseline">
+   <checkbox id="chkDirectMarketing" label="&directMarketing.label;" />
    <spacer flex="1" />
-   <menulist id="cmbAll">
-    <menupopup>
-     <menuitem label="&all.none;" value="0"/>
-     <menuitem label="&all.allow;" value="1"/>
-     <menuitem label="&all.block;" value="-1"/>
-    </menupopup>
-   </menulist>
-   <spacer flex="6" />
-  </hbox>
-  <hbox>
-   <checkbox id="chkJSDoorhanger" label="&jsDoorhanger.label;" />
-  </hbox>
-  <hbox>
-   <checkbox id="chkJSPrompt" label="&jsPrompt.label;" />
+   <label class="text-link" value="&directMarketing.details;" href="https://gdpr-info.eu/art-21-gdpr/" />
+   <spacer flex="5" />
   </hbox>
   <hbox>
    <checkbox id="chkSingleDoorhanger" label="&singleDoorhanger.label;" />
   </hbox>
  </vbox>
  <groupbox flex="6">
-  <caption><description value="&host.label;" /><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
+  <caption align="baseline"><description value="&host.label;" /><menulist id="cmbHost" oncommand="adpc_option.populateHost();"><menupopup /></menulist></caption>
   <vbox flex="1" id="lstScroll">
    <vbox id="lstRequest" />
   </vbox>
