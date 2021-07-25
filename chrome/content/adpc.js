@@ -36,7 +36,7 @@ var adpc_control =
       continue;
      if (wnd.navigator.wrappedJSObject.dataProtectionControl === undefined)
       continue;
-     let decisions = {};
+     let decisions = {withdraw: ['*']};
      let prev = adpc_api.getHost(bri.currentURI.asciiHost);
      if (prev !== null)
      {
@@ -47,12 +47,6 @@ var adpc_control =
         if (!decisions.hasOwnProperty('consent'))
          decisions.consent = [];
         decisions.consent.push(n);
-       }
-       else
-       {
-        if (!decisions.hasOwnProperty('withdraw'))
-         decisions.withdraw = [];
-        decisions.withdraw.push(n);
        }
       }
      }
@@ -588,22 +582,26 @@ var adpc_control =
     }
     if (retVals.length === 0)
     {
-     let ret = {consent: [], withdraw: []};
+     let ret = {withdraw: ['*']};
      adpc_control.showEye(window);
      for (let i = 0; i < resVals.length; i++)
      {
       await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
       if (!adpc_control.allBlocked() && resVals[i].value === 1)
+      {
+       if (!ret.hasOwnProperty('consent'))
+        ret.consent = [];
        ret.consent.push(resVals[i].id);
-      else 
-       ret.withdraw.push(resVals[i].id);
+      }
      }
      for (let i = 0; i < remVals.length; i++)
      {
       if (remVals[i].value === 1)
+      {
+       if (!ret.hasOwnProperty('consent'))
+        ret.consent = [];
        ret.consent.push(remVals[i].id);
-      else
-       ret.withdraw.push(remVals[i].id);
+      }
      }
      resolve(ret);
      return;
@@ -635,30 +633,36 @@ var adpc_control =
        callback: async function()
        {
         retVals[0].value = 1;
-        let ret = {consent: [], withdraw: []};
+        let ret = {withdraw: ['*']};
         adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
          if (retVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(retVals[i].id);
-         else
-          ret.withdraw.push(retVals[i].id);
+         }
         }
         for (let i = 0; i < resVals.length; i++)
         {
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(resVals[i].id);
-         else
-          ret.withdraw.push(resVals[i].id);
+         }
         }
         for (let i = 0; i < remVals.length; i++)
         {
          if (remVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(remVals[i].id);
-         else
-          ret.withdraw.push(remVals[i].id);
+         }
         }
         resolve(ret);
        }
@@ -670,30 +674,36 @@ var adpc_control =
         callback: async function()
         {
          retVals[0].value = 0;
-         let ret = {consent: [], withdraw: []};
+         let ret = {withdraw: ['*']};
          adpc_control.showEye(window);
          for (let i = 0; i < retVals.length; i++)
          {
           await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
           if (retVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
            ret.consent.push(retVals[i].id);
-          else
-           ret.withdraw.push(retVals[i].id);
+          }
          }
          for (let i = 0; i < resVals.length; i++)
          {
           await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
           if (resVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
            ret.consent.push(resVals[i].id);
-          else
-           ret.withdraw.push(resVals[i].id);
+          }
          }
          for (let i = 0; i < remVals.length; i++)
          {
           if (remVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
            ret.consent.push(remVals[i].id);
-          else
-           ret.withdraw.push(remVals[i].id);
+          }
          }
          resolve(ret);
         }
@@ -731,28 +741,34 @@ var adpc_control =
        accessKey: kAllowAll,
        callback: async function()
        {
-        let ret = {consent: [], withdraw: []};
+        let ret = {withdraw: ['*']};
         adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 1;
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
+         if (!ret.hasOwnProperty('consent'))
+          ret.consent = [];
          ret.consent.push(retVals[i].id);
         }
         for (let i = 0; i < resVals.length; i++)
         {
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(resVals[i].id);
-         else
-          ret.withdraw.push(resVals[i].id);
+         }
         }
         for (let i = 0; i < remVals.length; i++)
         {
          if (remVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(remVals[i].id);
-         else
-          ret.withdraw.push(remVals[i].id);
+         }
         }
         resolve(ret);
        }
@@ -762,28 +778,31 @@ var adpc_control =
        accessKey: kDenyAll,
        callback: async function()
        {
-        let ret = {consent: [], withdraw: []};
+        let ret = {withdraw: ['*']};
         adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 0;
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
-         ret.withdraw.push(retVals[i].id);
         }
         for (let i = 0; i < resVals.length; i++)
         {
          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
          if (resVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(resVals[i].id);
-         else
-          ret.withdraw.push(resVals[i].id);
+         }
         }
         for (let i = 0; i < remVals.length; i++)
         {
          if (remVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
           ret.consent.push(remVals[i].id);
-         else
-          ret.withdraw.push(remVals[i].id);
+         }
         }
         resolve(ret);
        }
@@ -820,7 +839,7 @@ var adpc_control =
   }
   if (retVals.length > 0)
    window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
-  let ret = {consent: [], withdraw: []};
+  let ret = {withdraw: ['*']};
   for (let i = 0; i < retVals.length; i++)
   {
    await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -830,23 +849,25 @@ var adpc_control =
      ret.consent = [];
     ret.consent.push(retVals[i].id);
    }
-   else
-    ret.withdraw.push(retVals[i].id);
   }
   for (let i = 0; i < resVals.length; i++)
   {
    await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
    if (resVals[i].value === 1)
+   {
+    if (!ret.hasOwnProperty('consent'))
+     ret.consent = [];
     ret.consent.push(resVals[i].id);
-   else
-    ret.withdraw.push(resVals[i].id);
+   }
   }
   for (let i = 0; i < remVals.length; i++)
   {
    if (remVals[i].value === 1)
+   {
+    if (!ret.hasOwnProperty('consent'))
+     ret.consent = [];
     ret.consent.push(remVals[i].id);
-   else
-    ret.withdraw.push(remVals[i].id);
+   }
   }
   return ret;
  },

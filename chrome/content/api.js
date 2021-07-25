@@ -416,7 +416,7 @@ var adpc_api =
      continue;
     if (wnd.navigator.wrappedJSObject.dataProtectionControl === undefined)
      continue;
-    let decisions = {};
+    let decisions = {withdraw: ['*']};
     let prev = adpc_api.getHost(host);
     if (prev !== null)
     {
@@ -427,12 +427,6 @@ var adpc_api =
        if (!decisions.hasOwnProperty('consent'))
         decisions.consent = [];
        decisions.consent.push(n);
-      }
-      else
-      {
-       if (!decisions.hasOwnProperty('withdraw'))
-        decisions.withdraw = [];
-       decisions.withdraw.push(n);
       }
      }
     }
