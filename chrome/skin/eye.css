@@ -1,0 +1,15 @@
+#adpc-eye-button
+{
+ width: 16px;
+ height: 16px;
+ list-style-image: url("chrome://adpc/skin/eye.png");
+ -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#adpc-eye-button:hover
+{
+ -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#adpc-eye-button:hover:active
+{
+ -moz-image-region: rect(0px, 48px, 16px, 32px);
+}

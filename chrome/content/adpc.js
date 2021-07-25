@@ -10,6 +10,8 @@ var adpc_control =
   observerService.addObserver(adpc_control.eventObserver, 'content-document-global-created', false);
   observerService.addObserver(adpc_control.eventObserver, 'document-element-inserted', false);
   Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefBranch).addObserver('extensions.adpc.objectTo', adpc_control.prefObserver, false);
+  window.getBrowser().addProgressListener(adpc_control.progressListener);
+  adpc_control.makeEye(window);
  },
  prefObserver:
  {
@@ -392,6 +394,7 @@ var adpc_control =
  {
   if (actions.length === 0)
    return;
+  adpc_control.showEye(window);
   if (adpc_control.allBlocked())
   {
    for (let i = 0; i < actions.length; i++)
@@ -456,6 +459,7 @@ var adpc_control =
      accessKey: kAllow,
      callback: async function()
      {
+      adpc_control.showEye(window);
       await adpc_api.setConsent(host, actions[0].id, 1, actions[0].text);
      }
     },
@@ -465,6 +469,7 @@ var adpc_control =
       accessKey: kDeny,
       callback: async function()
       {
+       adpc_control.showEye(window);
        await adpc_api.setConsent(host, actions[0].id, 0, actions[0].text);
       }
      }
@@ -497,6 +502,7 @@ var adpc_control =
      accessKey: kAllowAll,
      callback: async function()
      {
+      adpc_control.showEye(window);
       for (let i = 0; i < actions.length; i++)
       {
        await adpc_api.setConsent(host, actions[i].id, 1, actions[i].text);
@@ -508,6 +514,7 @@ var adpc_control =
      accessKey: kDenyAll,
      callback: async function()
      {
+      adpc_control.showEye(window);
       for (let i = 0; i < actions.length; i++)
       {
        await adpc_api.setConsent(host, actions[i].id, 0, actions[i].text);
@@ -582,6 +589,7 @@ var adpc_control =
     if (retVals.length === 0)
     {
      let ret = {consent: [], withdraw: []};
+     adpc_control.showEye(window);
      for (let i = 0; i < resVals.length; i++)
      {
       await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
@@ -628,6 +636,7 @@ var adpc_control =
        {
         retVals[0].value = 1;
         let ret = {consent: [], withdraw: []};
+        adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -662,6 +671,7 @@ var adpc_control =
         {
          retVals[0].value = 0;
          let ret = {consent: [], withdraw: []};
+         adpc_control.showEye(window);
          for (let i = 0; i < retVals.length; i++)
          {
           await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -722,6 +732,7 @@ var adpc_control =
        callback: async function()
        {
         let ret = {consent: [], withdraw: []};
+        adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 1;
@@ -752,6 +763,7 @@ var adpc_control =
        callback: async function()
        {
         let ret = {consent: [], withdraw: []};
+        adpc_control.showEye(window);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 0;
@@ -859,6 +871,51 @@ var adpc_control =
   if (hdr === 'withdraw=*')
    return false;
   return hdr;
+ },
+ progressListener: {
+  onLocationChange: function(aProgress, aRequest, aLocation, aFlags)
+  {
+   if (aLocation.asciiHost === '')
+   {
+    adpc_control.hideEye(window);
+    return;
+   }
+   let hList = adpc_api.getHost(aLocation.asciiHost);
+   if (hList === null || Object.keys(hList).length === 0)
+    adpc_control.hideEye(window);
+   else
+    adpc_control.showEye(window);
+  }
+ },
+ makeEye: function(wnd)
+ {
+  let urlBarIconsBox = wnd.document.getElementById('urlbar-icons');
+  if (!urlBarIconsBox)
+   return;
+  let spaceHeight = urlBarIconsBox.clientHeight;
+  let newIcon = wnd.document.createElement('image');
+  newIcon.setAttribute('id', 'adpc-eye-button');
+  newIcon.setAttribute('class', 'urlbar-icon');
+  newIcon.setAttribute('style', 'overflow: hidden; display: none; padding: 0; margin-left: 3px; margin-right: 3px;');
+  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/adpc.properties');
+  newIcon.setAttribute('tooltiptext', locale.GetStringFromName('eye.tooltip'));
+  newIcon.setAttribute('onclick', 'BrowserPageInfo(null, \'permTab\');')
+  let starButton = urlBarIconsBox.querySelector('#star-button');
+  urlBarIconsBox.insertBefore(newIcon,starButton);
+ },
+ showEye: function(wnd)
+ {
+  let adpcEyeButton = wnd.document.getElementById('adpc-eye-button');
+  if (!adpcEyeButton)
+   return;
+  adpcEyeButton.style.display = 'inline-block';
+ },
+ hideEye: function(wnd)
+ {
+  let adpcEyeButton = wnd.document.getElementById('adpc-eye-button');
+  if (!adpcEyeButton)
+   return;
+  adpcEyeButton.style.display = 'none';
  },
  allBlocked: function()
  {
