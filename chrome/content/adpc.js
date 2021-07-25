@@ -530,6 +530,7 @@ var adpc_control =
   }
   window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
   let laters = [];
+  adpc_control.showEye(window);
   for (let i = 0; i < retVals.length; i++)
   {
    if (retVals[i].value === -1)
@@ -840,6 +841,7 @@ var adpc_control =
   if (retVals.length > 0)
    window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
   let ret = {withdraw: ['*']};
+  adpc_control.showEye(window);
   for (let i = 0; i < retVals.length; i++)
   {
    await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
