@@ -351,8 +351,11 @@ var adpc_api =
  setConsentByIDX: async function(idx, val)
  {
   let oldVal = await adpc_api.getConsentFromIDX(idx);
-  if (oldVal.value === val)
-   return idx;
+  if (oldVal !== null)
+  {
+   if (oldVal.value === val)
+    return idx;
+  }
   let ret = await adpc_api._write(adpc_api._dbIDList, 'UPDATE ' + adpc_api._dbIDList + ' SET value = ?1 WHERE idx = ?2', [val, idx]);
   if (!ret)
    return false;

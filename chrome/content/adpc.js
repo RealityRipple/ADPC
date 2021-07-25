@@ -206,8 +206,16 @@ var adpc_control =
    let stack = dpc.listeners[event.type].slice();
    for (let i = 0, l = stack.length; i < l; i++)
    {
-    let nEvt = new wnd.wrappedJSObject.AdpcEvent(event.type, Components.utils.cloneInto(event.detail, wnd.wrappedJSObject));
-    stack[i].call(dpc, nEvt);
+    try
+    {
+     let nEvt = new wnd.wrappedJSObject.AdpcEvent(event.type, Components.utils.cloneInto(event.detail, wnd.wrappedJSObject));
+     stack[i].call(dpc, nEvt);
+    }
+    catch (ex)
+    {
+     console.log('Error dispatching AdpcEvent:', ex);
+     console.log('If you are overwriting the AdpcEvent class, please keep a constructor with the first two parameters (type, userDecisions), and the \'AdpcEvent.userDecisions\' property as a settable object.');
+    }
    }
    return !event.defaultPrevented;
   }, wnd.wrappedJSObject);
