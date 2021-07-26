@@ -396,7 +396,7 @@ var adpc_control =
  {
   if (actions.length === 0)
    return;
-  adpc_control.showEye(window);
+  adpc_control.showEye(window, host);
   if (adpc_control.allBlocked())
   {
    for (let i = 0; i < actions.length; i++)
@@ -461,7 +461,7 @@ var adpc_control =
      accessKey: kAllow,
      callback: async function()
      {
-      adpc_control.showEye(window);
+      adpc_control.showEye(window, host);
       await adpc_api.setConsent(host, actions[0].id, 1, actions[0].text);
      }
     },
@@ -471,7 +471,7 @@ var adpc_control =
       accessKey: kDeny,
       callback: async function()
       {
-       adpc_control.showEye(window);
+       adpc_control.showEye(window, host);
        await adpc_api.setConsent(host, actions[0].id, 0, actions[0].text);
       }
      }
@@ -504,7 +504,7 @@ var adpc_control =
      accessKey: kAllowAll,
      callback: async function()
      {
-      adpc_control.showEye(window);
+      adpc_control.showEye(window, host);
       for (let i = 0; i < actions.length; i++)
       {
        await adpc_api.setConsent(host, actions[i].id, 1, actions[i].text);
@@ -516,7 +516,7 @@ var adpc_control =
      accessKey: kDenyAll,
      callback: async function()
      {
-      adpc_control.showEye(window);
+      adpc_control.showEye(window, host);
       for (let i = 0; i < actions.length; i++)
       {
        await adpc_api.setConsent(host, actions[i].id, 0, actions[i].text);
@@ -538,7 +538,7 @@ var adpc_control =
   }
   window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
   let laters = [];
-  adpc_control.showEye(window);
+  adpc_control.showEye(window, host);
   for (let i = 0; i < retVals.length; i++)
   {
    if (retVals[i].value === -1)
@@ -592,7 +592,7 @@ var adpc_control =
     if (retVals.length === 0)
     {
      let ret = {withdraw: ['*']};
-     adpc_control.showEye(window);
+     adpc_control.showEye(window, host);
      for (let i = 0; i < resVals.length; i++)
      {
       await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
@@ -643,7 +643,7 @@ var adpc_control =
        {
         retVals[0].value = 1;
         let ret = {withdraw: ['*']};
-        adpc_control.showEye(window);
+        adpc_control.showEye(window, host);
         for (let i = 0; i < retVals.length; i++)
         {
          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -684,7 +684,7 @@ var adpc_control =
         {
          retVals[0].value = 0;
          let ret = {withdraw: ['*']};
-         adpc_control.showEye(window);
+         adpc_control.showEye(window, host);
          for (let i = 0; i < retVals.length; i++)
          {
           await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -751,7 +751,7 @@ var adpc_control =
        callback: async function()
        {
         let ret = {withdraw: ['*']};
-        adpc_control.showEye(window);
+        adpc_control.showEye(window, host);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 1;
@@ -788,7 +788,7 @@ var adpc_control =
        callback: async function()
        {
         let ret = {withdraw: ['*']};
-        adpc_control.showEye(window);
+        adpc_control.showEye(window, host);
         for (let i = 0; i < retVals.length; i++)
         {
          retVals[i].value = 0;
@@ -849,7 +849,7 @@ var adpc_control =
   if (retVals.length > 0)
    window.openDialog('chrome://adpc/content/prompt.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=150,top=150', host, retVals);
   let ret = {withdraw: ['*']};
-  adpc_control.showEye(window);
+  adpc_control.showEye(window, host);
   for (let i = 0; i < retVals.length; i++)
   {
    await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
@@ -915,8 +915,23 @@ var adpc_control =
    if (hList === null || Object.keys(hList).length === 0)
     adpc_control.hideEye(window);
    else
-    adpc_control.showEye(window);
+    adpc_control.showEye(window, aLocation.asciiHost);
   }
+ },
+ matchHost: function(wnd, host)
+ {
+  let matchedTab = false;
+  for (let i = 0; i < wnd.gBrowser.tabs.length; i++)
+  {
+   if (!wnd.gBrowser.tabs[i].hasAttribute('selected') || wnd.gBrowser.tabs[i].getAttribute('selected') !== 'true')
+    continue;
+   if (host === wnd.gBrowser.tabs[i].linkedBrowser.registeredOpenURI.asciiHost)
+   {
+    matchedTab = true;
+    break;
+   }
+  }
+  return matchedTab;
  },
  makeEye: function(wnd)
  {
@@ -934,8 +949,10 @@ var adpc_control =
   let starButton = urlBarIconsBox.querySelector('#star-button');
   urlBarIconsBox.insertBefore(newIcon,starButton);
  },
- showEye: function(wnd)
+ showEye: function(wnd, host)
  {
+  if (!adpc_control.matchHost(wnd, host))
+   return;
   let adpcEyeButton = wnd.document.getElementById('adpc-eye-button');
   if (!adpcEyeButton)
    return;
