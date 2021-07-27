@@ -925,6 +925,8 @@ var adpc_control =
   {
    if (!wnd.gBrowser.tabs[i].hasAttribute('selected') || wnd.gBrowser.tabs[i].getAttribute('selected') !== 'true')
     continue;
+   if (!wnd.gBrowser.tabs[i].linkedBrowser.hasOwnProperty('registeredOpenURI'))
+    continue;
    if (host === wnd.gBrowser.tabs[i].linkedBrowser.registeredOpenURI.asciiHost)
    {
     matchedTab = true;
