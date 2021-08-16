@@ -132,8 +132,21 @@ var adpc_api =
    return false;
   return true;
  },
+ baseDomain: function(host)
+ {
+  let eTLDService = Components.classes['@mozilla.org/network/effective-tld-service;1'].getService(Components.interfaces.nsIEffectiveTLDService);
+  try
+  {
+   return eTLDService.getBaseDomainFromHost(host);
+  }
+  catch (ex)
+  {
+   return host;
+  }
+ },
  getHost: function(host)
  {
+  host = adpc_api.baseDomain(host);
   let lRows = adpc_api._read_sync(adpc_api._dbURLList, 'SELECT id FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id']);
   if (lRows === false)
    return null;
@@ -181,6 +194,7 @@ var adpc_api =
  },
  getConsent: async function(host, name)
  {
+  host = adpc_api.baseDomain(host);
   let lRows = await adpc_api._read(adpc_api._dbURLList, 'SELECT id FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id']);
   if (lRows === null)
    return -1;
@@ -210,6 +224,7 @@ var adpc_api =
  },
  getConsentID: async function(host, name)
  {
+  host = adpc_api.baseDomain(host);
   if (adpc_api.isStandardID(name))
   {
    let idx = await adpc_api.getStandardID(name);
@@ -261,6 +276,7 @@ var adpc_api =
  },
  getLabel: async function(host, name)
  {
+  host = adpc_api.baseDomain(host);
   let lRows = await adpc_api._read(adpc_api._dbURLList, 'SELECT id, text FROM ' + adpc_api._dbURLList + ' WHERE url = :url', {'url': host}, ['id', 'text']);
   if (lRows === null)
    return null;
@@ -281,6 +297,7 @@ var adpc_api =
  },
  setConsent: async function(host, name, val, label)
  {
+  host = adpc_api.baseDomain(host);
   let idx = await adpc_api.getConsentID(host, name);
   if (idx !== null)
   {
@@ -368,6 +385,7 @@ var adpc_api =
  },
  withdrawConsent: async function(host, name)
  {
+  host = adpc_api.baseDomain(host);
   if (adpc_api.isStandardID(name))
   {
    let idx = await adpc_api.getStandardID(name);
@@ -403,6 +421,7 @@ var adpc_api =
  },
  _consentEvent: function(host)
  {
+  host = adpc_api.baseDomain(host);
   let mdtr = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
   let brw = mdtr.getEnumerator('navigator:browser');
   while (brw.hasMoreElements())
