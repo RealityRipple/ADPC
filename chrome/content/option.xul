@@ -44,8 +44,11 @@
  <label id="lblStandard" value="&standard.label;" />
  <spacer flex="1" />
  <hbox>
-  <button id="cmdClear"  class="dialog-button" label="&clearAllButton.label;" oncommand="adpc_option.clear();" />
+  <button id="cmdImport"  class="dialog-button" label="&importButton.label;" oncommand="adpc_option.bulkImport();" />
+  <button id="cmdExport"  class="dialog-button" label="&exportButton.label;" oncommand="adpc_option.bulkExport();" />
   <spacer flex="1" />
+  <button id="cmdClear"  class="dialog-button" label="&clearAllButton.label;" oncommand="adpc_option.clear();" />
+  <spacer flex="6" />
   <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_option.save(); window.close();" />
   <button id="cmdCancel" class="dialog-button" icon="cancel" label="&cancelButton.label;" oncommand="window.close();" />
  </hbox>

@@ -30,6 +30,7 @@ var adpc_option =
  listHost: async function()
  {
   const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
   let retVals = await adpc_api._read(adpc_api._dbURLList, 'SELECT url, id, text FROM ' + adpc_api._dbURLList, {}, ['url', 'id', 'text']);
   let sHosts = [];
   adpc_option._prefList = {};
@@ -63,6 +64,7 @@ var adpc_option =
    {
     lReq.removeChild(lReq.firstChild);
    }
+   adpc_option._hostList = null;
    document.getElementById('cmdClearURL').disabled = true;
   }
   else
@@ -70,11 +72,16 @@ var adpc_option =
    for (let i = 0; i < sHosts.length; i++)
    {
     let xHost = document.createElementNS(XUL_NS, 'menuitem');
-    xHost.setAttribute('label', sHosts[i]);
+    if (sHosts[i] === '*')
+     xHost.setAttribute('label', locale.GetStringFromName('host.all'));
+    else
+     xHost.setAttribute('label', sHosts[i]);
     xHost.setAttribute('value', sHosts[i]);
     cHost.appendChild(xHost);
    }
    document.getElementById('cmbHost').selectedIndex = 0;
+   if (document.getElementById('cmbHost').hasAttribute('disabled'))
+    document.getElementById('cmbHost').removeAttribute('disabled');
    adpc_option._hostList = retVals;
    document.getElementById('cmdClearURL').disabled = false;
    await adpc_option.populateHost();
@@ -233,6 +240,186 @@ var adpc_option =
   else
    alert(locale.formatStringFromName('clear.success', [iCt], 1));
   adpc_option.listHost();
+ },
+ bulkImport: async function()
+ {
+  try
+  {
+   let prompts = Components.classes['@mozilla.org/embedcomp/prompt-service;1'].getService(Components.interfaces.nsIPromptService);
+   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
+   let pLocale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
+   let picker = Components.classes['@mozilla.org/filepicker;1'].createInstance(Components.interfaces.nsIFilePicker);
+   let fileLocator = Components.classes['@mozilla.org/file/directory_service;1'].getService(Components.interfaces.nsIProperties);
+   picker.init(window, locale.GetStringFromName('import.picker.title'), picker.modeOpen);
+   picker.appendFilter(locale.GetStringFromName('file.json'), '*.json');
+   picker.appendFilters(picker.filterAll);
+   picker.displayDirectory = fileLocator.get('Docs', Components.interfaces.nsILocalFile);
+   if (picker.show() === picker.returnCancel)
+    return;
+   let fileStream = Components.classes['@mozilla.org/network/file-input-stream;1'].createInstance(Components.interfaces.nsIFileInputStream);
+   fileStream.init(picker.file, 0x01, 0444, 0);
+   let stream = Components.classes['@mozilla.org/intl/converter-input-stream;1'].createInstance(Components.interfaces.nsIConverterInputStream);
+   stream.init(fileStream, 'iso-8859-1', 16384, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+   stream = stream.QueryInterface(Components.interfaces.nsIUnicharLineInputStream);
+   let lines = [];
+   let line = {value: null};
+   while (stream.readLine(line))
+    lines.push(line.value);
+   if (line.value)
+    lines.push(line.value);
+   stream.close();
+   let d = JSON.parse(lines.join('\n'));
+   if (adpc_option._hostList !== null)
+   {
+    for (let h = 0; h < adpc_option._hostList.length; h++)
+    {
+     if (d.hasOwnProperty('include') && d.include.length > 0)
+     {
+      for (let i = d.include.length - 1; i >= 0; i--)
+      {
+       if (d.include[i].website !== adpc_option._hostList[h].url)
+        continue;
+       for (let j = d.include[i].consentRequests.length - 1; j >= 0; j--)
+       {
+        if (d.include[i].consentRequests[j].id !== adpc_option._hostList[h].name)
+         continue;
+        d.include[i].consentRequests.splice(j, 1);
+       }
+       if (d.include[i].consentRequests.length > 0)
+        continue;
+       d.include.splice(i, 1);
+      }
+     }
+     if (d.hasOwnProperty('exclude') && d.exclude.length > 0)
+     {
+      for (let i = d.exclude.length - 1; i >= 0; i--)
+      {
+       if (d.exclude[i].website !== adpc_option._hostList[h].url)
+        continue;
+       for (let j = d.exclude[i].consentRequests.length - 1; j >= 0; j--)
+       {
+        if (d.exclude[i].consentRequests[j].id !== adpc_option._hostList[h].name)
+         continue;
+        d.exclude[i].consentRequests.splice(j, 1);
+       }
+       if (d.exclude[i].consentRequests.length > 0)
+        continue;
+       d.exclude.splice(i, 1);
+      }
+     }
+    }
+   }
+   if ((!d.hasOwnProperty('include') || d.include.length === 0) &&
+       (!d.hasOwnProperty('exclude') || d.exclude.length === 0))
+   {
+    alert(locale.GetStringFromName('import.none'));
+    return;
+   }
+   var x = screen.width / 2 - 650 / 2;
+   var y = screen.height / 2 - 300 / 2;
+   window.openDialog('chrome://adpc/content/import.xul', '', 'chrome,dialog,resizable=no,alwaysRaised,modal,left=' + x + ',top=' + y, d);
+   adpc_option.listHost();
+  }
+  catch (e)
+  {
+   console.log(e);
+   alert(locale.GetStringFromName('import.error'));
+  }
+ },
+ bulkExport: function()
+ {
+  try
+  {
+   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
+   if (adpc_option._hostList === null)
+   {
+    alert(locale.GetStringFromName('export.none'));
+    return;
+   }
+   let lInclude = {};
+   let lExclude = {};
+   for (let i = 0; i < adpc_option._hostList.length; i++)
+   {
+    let c = adpc_option._hostList[i];
+    if (adpc_api.isStandardID(c.name))
+    {
+     if (c.value === 1)
+     {
+      if (lInclude['*'] === undefined)
+       lInclude['*'] = [];
+      lInclude['*'][c.name] = c.text;
+     }
+     if (c.value === 0)
+     {
+      if (lExclude['*'] === undefined)
+       lExclude['*'] = [];
+      lExclude['*'] = [];
+      lExclude['*'][c.name] = c.text;
+     }
+    }
+    else
+    {
+     if (c.value === 1)
+     {
+      if (lInclude[c.url] === undefined)
+       lInclude[c.url] = [];
+      lInclude[c.url][c.name] = c.text;
+     }
+     if (c.value === 0)
+     {
+      if (lExclude[c.url] === undefined)
+       lExclude[c.url] = [];
+      lExclude[c.url][c.name] = c.text;
+     }
+    }
+   }
+   let expList = {};
+   expList['include'] = [];
+   expList['exclude'] = [];
+   for (h in lInclude)
+   {
+    let e = {'website': h, 'consentRequests': []};
+    for (id in lInclude[h])
+    {
+     let r = {'id': id, 'text': lInclude[h][id]};
+     e.consentRequests.push(r);
+    }
+    expList['include'].push(e);
+   }
+   for (h in lExclude)
+   {
+    let e = {'website': h, 'consentRequests': []};
+    for (id in lExclude[h])
+    {
+     let r = {'id': id, 'text': lExclude[h][id]};
+     e.consentRequests.push(r);
+    }
+    expList['exclude'].push(e);
+   }
+   let sExp = JSON.stringify(expList, null, 1);
+   let picker = Components.classes['@mozilla.org/filepicker;1'].createInstance(Components.interfaces.nsIFilePicker);
+   let fileLocator = Components.classes['@mozilla.org/file/directory_service;1'].getService(Components.interfaces.nsIProperties);
+   picker.init(window, locale.GetStringFromName('export.picker.title'), picker.modeSave);
+   picker.defaultExtension = '.json';
+   picker.appendFilter(locale.GetStringFromName('file.json'), '*.json');
+   picker.appendFilters(picker.filterAll);
+   picker.displayDirectory = fileLocator.get('Docs', Components.interfaces.nsILocalFile);
+   if (picker.show() != picker.returnCancel)
+   {
+     let fileStream = Components.classes['@mozilla.org/network/file-output-stream;1'].createInstance(Components.interfaces.nsIFileOutputStream);
+     fileStream.init(picker.file, 0x02 | 0x08 | 0x20, 0644, 0);
+     let stream = Components.classes['@mozilla.org/intl/converter-output-stream;1'].createInstance(Components.interfaces.nsIConverterOutputStream);
+     stream.init(fileStream, 'UTF-8', 16384, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+     stream.writeString(sExp);
+     stream.close();
+     alert(locale.GetStringFromName('export.success'));
+   }
+  }
+  catch (e)
+  {
+   console.log(e);
+   alert(locale.GetStringFromName('export.error'));
+  }
  },
  save: async function()
  {
