@@ -24,7 +24,7 @@
  <label id="lblStandard" value="&standard.label;" />
  <hbox>
   <spacer flex="1" />
-  <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_prompt.save(); window.close();" />
+  <button id="cmdOK"     class="dialog-button" icon="accept" label="&okButton.label;"     oncommand="adpc_prompt.save();" />
   <button id="cmdCancel" class="dialog-button" icon="cancel" label="&cancelButton.label;" oncommand="window.close();" />
  </hbox>
 </window>

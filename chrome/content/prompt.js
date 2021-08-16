@@ -86,5 +86,6 @@ var adpc_prompt =
    else
     retVals[i].value = -1;
   }
+  window.close();
  }
 };
