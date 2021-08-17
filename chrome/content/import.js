@@ -124,8 +124,6 @@ var adpc_import =
    lAllow.setAttribute('value', 'allow');
    if (retVals[i].value === 1)
     lAllow.setAttribute('selected', 'true');
-   else
-    lAllow.setAttribute('disabled', 'true');
    lGrp.appendChild(lAllow);
    let lDeny = document.createElementNS(XUL_NS, 'radio');
    lDeny.setAttribute('label', sDeny);
@@ -137,16 +135,14 @@ var adpc_import =
     lChoiceChk.setAttribute('checked', 'true');
    }
    else
-   {
-    lDeny.setAttribute('disabled', 'true');
     lChoiceChk.setAttribute('checked', 'false');
-   }
    lGrp.appendChild(lDeny);
    lAct.appendChild(lGrp); 
    lChoiceBox.appendChild(lLbl);
    lChoiceBox.appendChild(lAct);
    lNew.appendChild(lChoiceBox);
    lReq.appendChild(lNew);
+   lGrp.addEventListener('select', adpc_import.enableChk, false);
   }
   let lblStd = document.getElementById('lblStandard');
   if (!hasStd)
@@ -161,13 +157,29 @@ var adpc_import =
    return;
   chk.checked = !chk.checked;
  },
+ enableChk: function(ev)
+ {
+  let chk = document.getElementById('chk' + ev.target.id.slice(3));
+  if (chk === undefined)
+   return;
+  chk.checked = true;
+ },
  save: async function()
  {
   for (let i = 0; i < adpc_import._vals.length; i++)
   {
    if (document.getElementById('chk' + adpc_import._vals[i].website + '_' + adpc_import._vals[i].id).getAttribute('checked') === 'true')
    {
-    await adpc_api.setConsent(adpc_import._vals[i].website, adpc_import._vals[i].id, adpc_import._vals[i].value, adpc_import._vals[i].text);
+    let v = adpc_import._vals[i].value;
+    let lGrp = document.getElementById('grp' + adpc_import._vals[i].website + '_' + adpc_import._vals[i].id);
+    if (lGrp !== undefined)
+    {
+     if (lGrp.value === 'allow')
+      v = 1;
+     else if (lGrp.value === 'deny')
+      v = 0;
+    }
+    await adpc_api.setConsent(adpc_import._vals[i].website, adpc_import._vals[i].id, v, adpc_import._vals[i].text);
    }
    //else
    // await adpc_api.setConsent(adpc_import._vals[i].website, adpc_import._vals[i].id, -1, adpc_import._vals[i].text);
