@@ -3,7 +3,7 @@
  <Description about="urn:mozilla:install-manifest">
   <em:name>ADPC</em:name>
   <em:id>{3D1F80B5-DA79-586E-8A89-603451EF31AD}</em:id>
-  <em:version>2.2</em:version>
+  <em:version>2.3</em:version>
   <em:type>2</em:type>
   <!-- Pale Moon -->
   <em:targetApplication>
