@@ -123,6 +123,27 @@ var adpc_control =
    return;
   if (!(wnd.navigator instanceof Navigator))
    return;
+  wnd.document.doAdpcEvent = true;
+  wnd.document.addEventListener('beforescriptexecute', function(event)
+  {
+   if (wnd.document.doAdpcEvent)
+   {
+    delete wnd.document.doAdpcEvent;
+    let scr = 'if (globalThis.AdpcEvent === undefined)\n';
+    scr+= '{\n';
+    scr+= ' class AdpcEvent extends Event\n';
+    scr+= ' {\n';
+    scr+= '  constructor(type, options)\n';
+    scr+= '  {\n';
+    scr+= '   super(type);\n';
+    scr+= '   this.userDecisions = options;\n';
+    scr+= '  }\n';
+    scr+= ' }\n';
+    scr+= ' globalThis.AdpcEvent = AdpcEvent;\n';
+    scr+= '}';
+    adpc_control.executePageScript(wnd.document, scr);
+   }
+  }, false);
   let host = wnd.document.domain;
   let dpc = {};
   if (wnd === wnd.top)
@@ -162,19 +183,6 @@ var adpc_control =
     o.capture = options;
    else
     o = options;
-   let scr = 'if (globalThis.AdpcEvent === undefined)\n';
-   scr+= '{\n';
-   scr+= ' class AdpcEvent extends Event\n';
-   scr+= ' {\n';
-   scr+= '  constructor(type, options)\n';
-   scr+= '  {\n';
-   scr+= '   super(type);\n';
-   scr+= '   this.userDecisions = options;\n';
-   scr+= '  }\n';
-   scr+= ' }\n';
-   scr+= ' globalThis.AdpcEvent = AdpcEvent;\n';
-   scr+= '}';
-   adpc_control.executePageScript(wnd.document, scr);
    if (!(type in dpc.listeners))
     dpc.listeners[type] = [];
    dpc.listeners[type].push(listener);
