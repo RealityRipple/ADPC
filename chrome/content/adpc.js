@@ -129,19 +129,7 @@ var adpc_control =
    if (wnd.document.doAdpcEvent)
    {
     delete wnd.document.doAdpcEvent;
-    let scr = 'if (globalThis.AdpcEvent === undefined)\n';
-    scr+= '{\n';
-    scr+= ' class AdpcEvent extends Event\n';
-    scr+= ' {\n';
-    scr+= '  constructor(type, options)\n';
-    scr+= '  {\n';
-    scr+= '   super(type);\n';
-    scr+= '   this.userDecisions = options;\n';
-    scr+= '  }\n';
-    scr+= ' }\n';
-    scr+= ' globalThis.AdpcEvent = AdpcEvent;\n';
-    scr+= '}';
-    adpc_control.executePageScript(wnd.document, scr);
+    Services.scriptloader.loadSubScript('chrome://adpc/content/event.js', wnd.document.wrappedJSObject);
    }
   }, false);
   let host = wnd.document.domain;
@@ -228,13 +216,6 @@ var adpc_control =
    return !event.defaultPrevented;
   }, wnd.wrappedJSObject);
   wnd.navigator.wrappedJSObject.dataProtectionControl = Components.utils.cloneInto(dpc, wnd.wrappedJSObject, {cloneFunctions: true});
- },
- executePageScript: function(doc, script)
- {
-  let eScr = doc.createElement('script');
-  eScr.textContent = script;
-  doc.head.appendChild(eScr);
-  eScr.remove();
  },
  handleDocInserted: function(doc)
  {
