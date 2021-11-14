@@ -20,9 +20,9 @@ var adpc_option =
    aObject = pObject.split(' ');
   let cDM = document.getElementById('chkDirectMarketing');
   cDM.checked = aObject.includes('direct-marketing');
-  let cSDH = document.getElementById('chkSingleDoorhanger');
-  if (adpc_option._Prefs.prefHasUserValue('singleDoorhanger'))
-   cSDH.checked = adpc_option._Prefs.getBoolPref('singleDoorhanger');
+  let cSDH = document.getElementById('chkSingleChoice');
+  if (adpc_option._Prefs.prefHasUserValue('singleChoice'))
+   cSDH.checked = adpc_option._Prefs.getBoolPref('singleChoice');
   else
    cSDH.checked = false;
   adpc_option.listHost();
@@ -430,8 +430,8 @@ var adpc_option =
   if (cDM.checked)
    aObject.push('direct-marketing');
   adpc_option._Prefs.setCharPref('objectTo', aObject.join(' '));
-  let cSDH = document.getElementById('chkSingleDoorhanger');
-  adpc_option._Prefs.setBoolPref('singleDoorhanger', cSDH.checked);
+  let cSDH = document.getElementById('chkSingleChoice');
+  adpc_option._Prefs.setBoolPref('singleChoice', cSDH.checked);
   for (idx in adpc_option._prefList)
   {
    let val = adpc_option._prefList[idx];

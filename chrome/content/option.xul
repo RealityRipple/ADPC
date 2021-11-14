@@ -28,7 +28,7 @@
    <spacer flex="5" />
   </hbox>
   <hbox>
-   <checkbox id="chkSingleDoorhanger" label="&singleDoorhanger.label;" />
+   <checkbox id="chkSingleChoice" label="&singleChoice.doorhanger.label;" />
   </hbox>
  </vbox>
  <groupbox flex="6">

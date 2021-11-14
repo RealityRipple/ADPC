@@ -425,10 +425,10 @@ var adpc_control =
   if (host !== wnd.registeredOpenURI.asciiHost)
    return;
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
-  let singleDoorhanger = false;
-  if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
-   singleDoorhanger = adpc_control._Prefs.getBoolPref('singleDoorhanger');
-  if (singleDoorhanger && actions.length === 1)
+  let singleChoice = false;
+  if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
+   singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+  if (singleChoice && actions.length === 1)
   {
    let cleanText = actions[0].text;
    cleanText = cleanText.replaceAll('"', '');
@@ -605,10 +605,10 @@ var adpc_control =
      return;
     }
     let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
-    let singleDoorhanger = false;
-    if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
-     singleDoorhanger = adpc_control._Prefs.getBoolPref('singleDoorhanger');
-    if (singleDoorhanger && retVals.length === 1)
+    let singleChoice = false;
+    if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
+     singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+    if (singleChoice && retVals.length === 1)
     {
      let cleanText = retVals[0].text;
      cleanText = cleanText.replaceAll('"', '');
