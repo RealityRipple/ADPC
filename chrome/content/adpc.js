@@ -547,13 +547,18 @@ var adpc_control =
    return;
   if (host !== wnd.registeredOpenURI.asciiHost)
    return;
+  let sID = adpc_control.getActionString(actions);
   let notifyBox = gBrowser.getNotificationBox(wnd);
   let allNotifications = notifyBox.allNotifications;
   for (let i = 0; i < allNotifications.length; i++)
   {
    let item = allNotifications[i];
-   if (item.value === 'adpc')
+   if (item.value.slice(0, 4) === 'adpc')
+   {
+    if (item.value === sID)
+     return;
     item.close();
+   }
   }
   let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
   let singleChoice = false;
@@ -579,7 +584,7 @@ var adpc_control =
    let sDeny = locale.GetStringFromName('deny.label');
    let kDeny = locale.GetStringFromName('deny.accesskey');
    notifyBox.appendNotification(sPermissionSng,
-    'adpc',
+    sID,
     'chrome://adpc/skin/logo16.png',
     notifyBox.PRIORITY_INFO_HIGH,
     [
@@ -616,7 +621,7 @@ var adpc_control =
   let sDenyAll = locale.GetStringFromName('deny.all.label');
   let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
   notifyBox.appendNotification(sPermissionPlr,
-   'adpc',
+   sID,
    'chrome://adpc/skin/logo16.png',
    notifyBox.PRIORITY_INFO_HIGH,
    [
@@ -1036,13 +1041,18 @@ var adpc_control =
      resolve(ret);
      return;
     }
+    let sID = adpc_control.getActionString(retVals);
     let notifyBox = gBrowser.getNotificationBox(wnd);
     let allNotifications = notifyBox.allNotifications;
     for (let i = 0; i < allNotifications.length; i++)
     {
      let item = allNotifications[i];
-     if (item.value === 'adpc')
+     if (item.value.slice(0, 4) === 'adpc')
+     {
+      if (item.value === sID)
+       return;
       item.close();
+     }
     }
     let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
     let singleChoice = false;
@@ -1068,7 +1078,7 @@ var adpc_control =
      let sDeny = locale.GetStringFromName('deny.label');
      let kDeny = locale.GetStringFromName('deny.accesskey');
      notifyBox.appendNotification(sPermissionSng,
-      'adpc',
+      sID,
       'chrome://adpc/skin/logo16.png',
       notifyBox.PRIORITY_INFO_HIGH,
       [
@@ -1167,7 +1177,7 @@ var adpc_control =
     let sDenyAll = locale.GetStringFromName('deny.all.label');
     let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
     notifyBox.appendNotification(sPermissionPlr,
-     'adpc',
+     sID,
      'chrome://adpc/skin/logo16.png',
      notifyBox.PRIORITY_INFO_HIGH,
      [
@@ -1415,6 +1425,15 @@ var adpc_control =
   if (adpc_control._Prefs.prefHasUserValue('displayAs'))
    sDisplayAs = adpc_control._Prefs.getCharPref('displayAs');
   return sDisplayAs;
+ },
+ getActionString: function(actions)
+ {
+  let cleanList = [];
+  for (let i = 0; i < actions.length; i++)
+  {
+   cleanList.push({id: actions[i].id, text: actions[i].text});
+  }
+  return 'adpc_' + JSON.stringify(cleanList);
  }
 };
 
