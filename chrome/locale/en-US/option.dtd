@@ -2,7 +2,8 @@
 <!ENTITY blockAll.label "Automatically reject all requests">
 <!ENTITY directMarketing.label "Object to direct marketing">
 <!ENTITY directMarketing.details "Article 21(2) GDPR">
-<!ENTITY singleChoice.doorhanger.label "Show site-provided description in single-choice doorhangers">
+<!ENTITY displayAs.label "Display prompts as">
+<!ENTITY displayAs.doorhanger "a doorhanger">
 <!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">
 <!ENTITY clearAllButton.label "Clear All Choices">

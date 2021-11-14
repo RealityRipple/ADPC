@@ -20,6 +20,29 @@ var adpc_option =
    aObject = pObject.split(' ');
   let cDM = document.getElementById('chkDirectMarketing');
   cDM.checked = aObject.includes('direct-marketing');
+  let cDisplayAs = document.getElementById('cmbDisplayAs');
+  let dDisplayAs = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getDefaultBranch('extensions.adpc.').getCharPref('displayAs');
+  let sDisplayAs = dDisplayAs;
+  if (adpc_option._Prefs.prefHasUserValue('displayAs'))
+   sDisplayAs = adpc_option._Prefs.getCharPref('displayAs');
+  let displayIndex = -1;
+  for (let i = 0; i < cDisplayAs.itemCount; i++)
+  {
+   let cDisplay = cDisplayAs.getItemAtIndex(i);
+   if (cDisplay.value === sDisplayAs)
+   {
+    displayIndex = i;
+    break;
+   }
+  }
+  if (displayIndex === -1)
+  {
+   displayIndex = 0;
+   sDisplayAs = defaultDisplayAs;
+   adpc_option._Prefs.clearUserPref('displayAs');
+  }
+  cDisplayAs.selectedIndex = displayIndex;
+  adpc_option.displayAs();
   let cSDH = document.getElementById('chkSingleChoice');
   if (adpc_option._Prefs.prefHasUserValue('singleChoice'))
    cSDH.checked = adpc_option._Prefs.getBoolPref('singleChoice');
@@ -32,6 +55,15 @@ var adpc_option =
   else
    cSDH.checked = false;
   adpc_option.listHost();
+ },
+ displayAs: function()
+ {
+  let nDisplayAs = document.getElementById('cmbDisplayAs');
+  let sDisplayAs = nDisplayAs.value;
+  let nSingleChoice = document.getElementById('chkSingleChoice');
+  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/option.properties');
+  let sSingleChoice = locale.GetStringFromName('singleChoice.' + sDisplayAs + '.label');
+  nSingleChoice.setAttribute('label', sSingleChoice);
  },
  listHost: async function()
  {
@@ -436,6 +468,8 @@ var adpc_option =
   if (cDM.checked)
    aObject.push('direct-marketing');
   adpc_option._Prefs.setCharPref('objectTo', aObject.join(' '));
+  let cDisplayAs = document.getElementById('cmbDisplayAs');
+  adpc_option._Prefs.setCharPref('displayAs', cDisplayAs.value);
   let cSDH = document.getElementById('chkSingleChoice');
   adpc_option._Prefs.setBoolPref('singleChoice', cSDH.checked);
   for (idx in adpc_option._prefList)
