@@ -394,7 +394,15 @@ var adpc_control =
    }
    return;
   }
-  adpc_control._linkDoorhanger(wnd, host, actions);
+  switch (adpc_control.getDisplayAs())
+  {
+   case 'infobar':
+    adpc_control._linkInfobar(wnd, host, actions);
+    break;
+   default:
+    adpc_control._linkDoorhanger(wnd, host, actions);
+    break;
+  }
  },
  jsRequest: function (wnd, host, actions)
  {
@@ -412,7 +420,16 @@ var adpc_control =
      resolve(blankRet);
      return;
     }
-    let dhRet = await adpc_control._jsDoorhanger(wnd, host, actions);
+    let dhRet = null;
+    switch (adpc_control.getDisplayAs())
+    {
+     case 'infobar':
+      dhRet = await adpc_control._jsInfobar(wnd, host, actions);
+      break;
+     default:
+      dhRet = await adpc_control._jsDoorhanger(wnd, host, actions);
+      break;
+    }
     resolve(dhRet);
    }
   );
@@ -524,6 +541,124 @@ var adpc_control =
    }
   );
  },
+ _linkInfobar: function(wnd, host, actions)
+ {
+  if (actions.length === 0)
+   return;
+  if (host !== wnd.registeredOpenURI.asciiHost)
+   return;
+  let notifyBox = gBrowser.getNotificationBox(wnd);
+  let allNotifications = notifyBox.allNotifications;
+  for (let i = 0; i < allNotifications.length; i++)
+  {
+   let item = allNotifications[i];
+   if (item.value === 'adpc')
+    item.close();
+  }
+  let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
+  let singleChoice = false;
+  if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
+   singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+  else if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
+  {
+   singleChoice = adpc_control._Prefs.getBoolPref('singleDoorhanger');
+   adpc_control._Prefs.setBoolPref('singleChoice', singleChoice);
+   adpc_control._Prefs.clearUserPref('singleDoorhanger');
+  }
+  if (singleChoice && actions.length === 1)
+  {
+   let cleanText = actions[0].text;
+   cleanText = cleanText.replaceAll('"', '');
+   while (cleanText.includes('\'\''))
+   {
+    cleanText = cleanText.replaceAll('\'\'', '\'');
+   }
+   let sPermissionSng = locale.formatStringFromName('permission.single', [adpc_api.baseDomain(host), cleanText], 2);
+   let sAllow = locale.GetStringFromName('allow.label');
+   let kAllow = locale.GetStringFromName('allow.accesskey');
+   let sDeny = locale.GetStringFromName('deny.label');
+   let kDeny = locale.GetStringFromName('deny.accesskey');
+   notifyBox.appendNotification(sPermissionSng,
+    'adpc',
+    'chrome://adpc/skin/logo16.png',
+    notifyBox.PRIORITY_INFO_HIGH,
+    [
+     {
+      label: sAllow,
+      accessKey: kAllow,
+      isDefault: true,
+      callback: async function(n)
+      {
+       adpc_control.showEye(window, host);
+       await adpc_api.setConsent(host, actions[0].id, 1, actions[0].text);
+       n.close();
+      }
+     },
+     {
+      label: sDeny,
+      accessKey: kDeny,
+      callback: async function(n)
+      {
+       adpc_control.showEye(window, host);
+       await adpc_api.setConsent(host, actions[0].id, 0, actions[0].text);
+       n.close();
+      }
+     }
+    ]
+   );
+   return;
+  }
+  let sPermissionPlr = locale.formatStringFromName('permission.plural', [adpc_api.baseDomain(host)], 1);
+  let sDetails = locale.GetStringFromName('details.label');
+  let kDetails = locale.GetStringFromName('details.accesskey');
+  let sAllowAll = locale.GetStringFromName('allow.all.label');
+  let kAllowAll = locale.GetStringFromName('allow.all.accesskey');
+  let sDenyAll = locale.GetStringFromName('deny.all.label');
+  let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
+  notifyBox.appendNotification(sPermissionPlr,
+   'adpc',
+   'chrome://adpc/skin/logo16.png',
+   notifyBox.PRIORITY_INFO_HIGH,
+   [
+    {
+     label: sDetails,
+     accessKey: kDetails,
+     isDefault: true,
+     callback: async function(n)
+     {
+      if (await adpc_control._linkDialog(wnd, host, actions))
+       n.close();
+     }
+    },
+    {
+     label: sAllowAll,
+     accessKey: kAllowAll,
+     callback: async function(n)
+     {
+      adpc_control.showEye(window, host);
+      for (let i = 0; i < actions.length; i++)
+      {
+       await adpc_api.setConsent(host, actions[i].id, 1, actions[i].text);
+      }
+      n.close();
+     }
+    },
+    {
+     label: sDenyAll,
+     accessKey: kDenyAll,
+     callback: async function(n)
+     {
+      adpc_control.showEye(window, host);
+      for (let i = 0; i < actions.length; i++)
+      {
+       await adpc_api.setConsent(host, actions[i].id, 0, actions[i].text);
+      }
+      n.close();
+     }
+    }
+   ]
+  );
+ },
  _linkDialog: async function(wnd, host, actions)
  {
   let retVals = [];
@@ -541,8 +676,17 @@ var adpc_control =
    await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
   }
   if (laters.length === 0)
-   return;
-  adpc_control._linkDoorhanger(wnd, host, laters);
+   return true;
+  switch (adpc_control.getDisplayAs())
+  {
+   case 'infobar':
+    adpc_control._linkInfobar(wnd, host, laters);
+    break;
+   default:
+    adpc_control._linkDoorhanger(wnd, host, laters);
+    break;
+  }
+  return false;
  },
  _jsDoorhanger: function(src, host, actions)
  {
@@ -826,6 +970,297 @@ var adpc_control =
   );
   return p;
  },
+ _jsInfobar: function(src, host, actions)
+ {
+  let p = new Promise(
+   async function(resolve, reject)
+   {
+    if (gBrowser.browsers === undefined || gBrowser.browsers === null || gBrowser.browsers.length === 0)
+     return;
+    let wnd = null;
+    for (let t = 0; t < gBrowser.browsers.length; t++)
+    {
+     let brw = gBrowser.browsers[t];
+     if (src === brw.contentWindow)
+     {
+      wnd = brw;
+      break;
+     }
+    }
+    if (wnd === null)
+     return;
+    if (host !== wnd.registeredOpenURI.asciiHost)
+     return;
+    let prev = adpc_api.getHost(host);
+    let retVals = [];
+    let remVals = [];
+    let resVals = [];
+    for (let i = 0; i < actions.length; i++)
+    {
+     let val = -1;
+     if (prev !== null)
+     {
+      if (actions[i].id in prev)
+       val = prev[actions[i].id];
+     }
+     if (val !== -1)
+      remVals.push({id: actions[i].id, text: actions[i].text, value: val});
+     else if (adpc_control.allBlocked())
+      resVals.push({id: actions[i].id, text: actions[i].text, value: -1});
+     else
+      retVals.push({id: actions[i].id, text: actions[i].text, value: val});
+    }
+    if (retVals.length === 0)
+    {
+     let ret = {withdraw: ['*']};
+     adpc_control.showEye(window, host);
+     for (let i = 0; i < resVals.length; i++)
+     {
+      await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
+      if (!adpc_control.allBlocked() && resVals[i].value === 1)
+      {
+       if (!ret.hasOwnProperty('consent'))
+        ret.consent = [];
+       ret.consent.push(resVals[i].id);
+      }
+     }
+     for (let i = 0; i < remVals.length; i++)
+     {
+      if (remVals[i].value === 1)
+      {
+       if (!ret.hasOwnProperty('consent'))
+        ret.consent = [];
+       ret.consent.push(remVals[i].id);
+      }
+     }
+     resolve(ret);
+     return;
+    }
+    let notifyBox = gBrowser.getNotificationBox(wnd);
+    let allNotifications = notifyBox.allNotifications;
+    for (let i = 0; i < allNotifications.length; i++)
+    {
+     let item = allNotifications[i];
+     if (item.value === 'adpc')
+      item.close();
+    }
+    let locale = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(Components.interfaces.nsIStringBundleService).createBundle('chrome://adpc/locale/prompt.properties');
+    let singleChoice = false;
+    if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
+     singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+    else if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
+    {
+     singleChoice = adpc_control._Prefs.getBoolPref('singleDoorhanger');
+     adpc_control._Prefs.setBoolPref('singleChoice', singleChoice);
+     adpc_control._Prefs.clearUserPref('singleDoorhanger');
+    }
+    if (singleChoice && retVals.length === 1)
+    {
+     let cleanText = retVals[0].text;
+     cleanText = cleanText.replaceAll('"', '');
+     while (cleanText.includes('\'\''))
+     {
+      cleanText = cleanText.replaceAll('\'\'', '\'');
+     }
+     let sPermissionSng = locale.formatStringFromName('permission.single', [adpc_api.baseDomain(host), cleanText], 2);
+     let sAllow = locale.GetStringFromName('allow.label');
+     let kAllow = locale.GetStringFromName('allow.accesskey');
+     let sDeny = locale.GetStringFromName('deny.label');
+     let kDeny = locale.GetStringFromName('deny.accesskey');
+     notifyBox.appendNotification(sPermissionSng,
+      'adpc',
+      'chrome://adpc/skin/logo16.png',
+      notifyBox.PRIORITY_INFO_HIGH,
+      [
+       {
+        label: sAllow,
+        accessKey: kAllow,
+        isDefault: true,
+        callback: async function(n)
+        {
+         retVals[0].value = 1;
+         let ret = {withdraw: ['*']};
+         adpc_control.showEye(window, host);
+         for (let i = 0; i < retVals.length; i++)
+         {
+          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
+          if (retVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(retVals[i].id);
+          }
+         }
+         for (let i = 0; i < resVals.length; i++)
+         {
+          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
+          if (resVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(resVals[i].id);
+          }
+         }
+         for (let i = 0; i < remVals.length; i++)
+         {
+          if (remVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(remVals[i].id);
+          }
+         }
+         resolve(ret);
+         n.close();
+        }
+       },
+       {
+        label: sDeny,
+        accessKey: kDeny,
+        callback: async function(n)
+        {
+         retVals[0].value = 0;
+         let ret = {withdraw: ['*']};
+         adpc_control.showEye(window, host);
+         for (let i = 0; i < retVals.length; i++)
+         {
+          await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
+          if (retVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(retVals[i].id);
+          }
+         }
+         for (let i = 0; i < resVals.length; i++)
+         {
+          await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
+          if (resVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(resVals[i].id);
+          }
+         }
+         for (let i = 0; i < remVals.length; i++)
+         {
+          if (remVals[i].value === 1)
+          {
+           if (!ret.hasOwnProperty('consent'))
+            ret.consent = [];
+           ret.consent.push(remVals[i].id);
+          }
+         }
+         resolve(ret);
+         n.close();
+        }
+       }
+      ]
+     );
+     return;
+    }
+    let sPermissionPlr = locale.formatStringFromName('permission.plural', [adpc_api.baseDomain(host)], 1);
+    let sDetails = locale.GetStringFromName('details.label');
+    let kDetails = locale.GetStringFromName('details.accesskey');
+    let sAllowAll = locale.GetStringFromName('allow.all.label');
+    let kAllowAll = locale.GetStringFromName('allow.all.accesskey');
+    let sDenyAll = locale.GetStringFromName('deny.all.label');
+    let kDenyAll = locale.GetStringFromName('deny.all.accesskey');
+    notifyBox.appendNotification(sPermissionPlr,
+     'adpc',
+     'chrome://adpc/skin/logo16.png',
+     notifyBox.PRIORITY_INFO_HIGH,
+     [
+      {
+       label: sDetails,
+       accessKey: kDetails,
+       isDefault: true,
+       callback: async function(n)
+       {
+        let ret = await adpc_control._jsDialog(wnd, host, actions);
+        resolve(ret);
+        n.close();
+       }
+      },
+      {
+       label: sAllowAll,
+       accessKey: kAllowAll,
+       callback: async function(n)
+       {
+        let ret = {withdraw: ['*']};
+        adpc_control.showEye(window, host);
+        for (let i = 0; i < retVals.length; i++)
+        {
+         retVals[i].value = 1;
+         await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
+         if (!ret.hasOwnProperty('consent'))
+          ret.consent = [];
+         ret.consent.push(retVals[i].id);
+        }
+        for (let i = 0; i < resVals.length; i++)
+        {
+         await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
+         if (resVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
+          ret.consent.push(resVals[i].id);
+         }
+        }
+        for (let i = 0; i < remVals.length; i++)
+        {
+         if (remVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
+          ret.consent.push(remVals[i].id);
+         }
+        }
+        resolve(ret);
+        n.close();
+       }
+      },
+      {
+       label: sDenyAll,
+       accessKey: kDenyAll,
+       callback: async function(n)
+       {
+        let ret = {withdraw: ['*']};
+        adpc_control.showEye(window, host);
+        for (let i = 0; i < retVals.length; i++)
+        {
+         retVals[i].value = 0;
+         await adpc_api.setConsent(host, retVals[i].id, retVals[i].value, retVals[i].text);
+        }
+        for (let i = 0; i < resVals.length; i++)
+        {
+         await adpc_api.setConsent(host, resVals[i].id, resVals[i].value, resVals[i].text);
+         if (resVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
+          ret.consent.push(resVals[i].id);
+         }
+        }
+        for (let i = 0; i < remVals.length; i++)
+        {
+         if (remVals[i].value === 1)
+         {
+          if (!ret.hasOwnProperty('consent'))
+           ret.consent = [];
+          ret.consent.push(remVals[i].id);
+         }
+        }
+        resolve(ret);
+        n.close();
+       }
+      }
+     ]
+    );
+   }
+  );
+  return p;
+ },
  _jsDialog: async function(wnd, host, actions)
  {
   let prev = adpc_api.getHost(host);
@@ -973,6 +1408,13 @@ var adpc_control =
   if (adpc_control._Prefs.prefHasUserValue('blockAll'))
    return adpc_control._Prefs.getBoolPref('blockAll');
   return false;
+ },
+ getDisplayAs: function()
+ {
+  let sDisplayAs = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService).getDefaultBranch('extensions.adpc.').getCharPref('displayAs');
+  if (adpc_control._Prefs.prefHasUserValue('displayAs'))
+   sDisplayAs = adpc_control._Prefs.getCharPref('displayAs');
+  return sDisplayAs;
  }
 };
 

@@ -4,6 +4,7 @@
 <!ENTITY directMarketing.details "Article 21(2) GDPR">
 <!ENTITY displayAs.label "Display prompts as">
 <!ENTITY displayAs.doorhanger "a doorhanger">
+<!ENTITY displayAs.infobar "an infobar">
 <!ENTITY host.label "Host:">
 <!ENTITY clearButton.label "Clear Choices">
 <!ENTITY clearAllButton.label "Clear All Choices">
