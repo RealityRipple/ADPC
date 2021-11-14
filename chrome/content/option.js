@@ -91,7 +91,7 @@ var adpc_option =
   if (sHosts.length === 0)
   {
    let xHost = document.createElementNS(XUL_NS, 'menuitem');
-   xHost.setAttribute('label', 'No ADPC Websites Visited');
+   xHost.setAttribute('label', locale.GetStringFromName('host.none'));
    xHost.setAttribute('value', '');
    cHost.appendChild(xHost);
    document.getElementById('cmbHost').selectedIndex = 0;
