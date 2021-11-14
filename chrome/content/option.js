@@ -23,6 +23,12 @@ var adpc_option =
   let cSDH = document.getElementById('chkSingleChoice');
   if (adpc_option._Prefs.prefHasUserValue('singleChoice'))
    cSDH.checked = adpc_option._Prefs.getBoolPref('singleChoice');
+  else if (adpc_option._Prefs.prefHasUserValue('singleDoorhanger'))
+  {
+   cSDH.checked = adpc_option._Prefs.getBoolPref('singleDoorhanger');
+   adpc_option._Prefs.setBoolPref('singleChoice', cSDH.checked);
+   adpc_option._Prefs.clearUserPref('singleDoorhanger');
+  }
   else
    cSDH.checked = false;
   adpc_option.listHost();

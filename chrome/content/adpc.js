@@ -428,6 +428,12 @@ var adpc_control =
   let singleChoice = false;
   if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
    singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+  else if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
+  {
+   singleChoice = adpc_control._Prefs.getBoolPref('singleDoorhanger');
+   adpc_control._Prefs.setBoolPref('singleChoice', singleChoice);
+   adpc_control._Prefs.clearUserPref('singleDoorhanger');
+  }
   if (singleChoice && actions.length === 1)
   {
    let cleanText = actions[0].text;
@@ -608,6 +614,12 @@ var adpc_control =
     let singleChoice = false;
     if (adpc_control._Prefs.prefHasUserValue('singleChoice'))
      singleChoice = adpc_control._Prefs.getBoolPref('singleChoice');
+    else if (adpc_control._Prefs.prefHasUserValue('singleDoorhanger'))
+    {
+     singleChoice = adpc_control._Prefs.getBoolPref('singleDoorhanger');
+     adpc_control._Prefs.setBoolPref('singleChoice', singleChoice);
+     adpc_control._Prefs.clearUserPref('singleDoorhanger');
+    }
     if (singleChoice && retVals.length === 1)
     {
      let cleanText = retVals[0].text;
