@@ -1,3 +1,11 @@
+#notification-popup-box[anchorid="adpc-notification-icon"] > #adpc-notification-icon
+{
+ display: -moz-box;
+}
+#adpc-notification-icon
+{
+ list-style-image: url(chrome://adpc/skin/logo16.png);
+}
 .popup-notification-icon[popupid="adpc"]
 {
  list-style-image: url("chrome://adpc/skin/logo64.png");

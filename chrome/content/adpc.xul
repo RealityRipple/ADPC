@@ -4,4 +4,7 @@
 <overlay id="adpc_overlay" xmlns:html="http://www.w3.org/1999/xhtml" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  <script type="application/x-javascript" src="chrome://adpc/content/api.js"></script>
  <script type="application/x-javascript" src="chrome://adpc/content/adpc.js"></script>
+ <box id="notification-popup-box">
+  <image id="adpc-notification-icon" class="notification-anchor-icon" role="button" />
+ </box>
 </overlay>

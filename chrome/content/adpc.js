@@ -467,7 +467,7 @@ var adpc_control =
    PopupNotifications.show(wnd,
     'adpc',
     sPermissionSng,
-    null,
+    'adpc-notification-icon',
     {
      label: sAllow,
      accessKey: kAllow,
@@ -504,7 +504,7 @@ var adpc_control =
   PopupNotifications.show(wnd,
    'adpc',
    sPermissionPlr,
-   null,
+   'adpc-notification-icon',
    {
     label: sDetails,
     accessKey: kDetails,
@@ -780,7 +780,7 @@ var adpc_control =
      PopupNotifications.show(wnd,
       'adpc',
       sPermissionSng,
-      null,
+      'adpc-notification-icon',
       {
        label: sAllow,
        accessKey: kAllow,
@@ -879,7 +879,7 @@ var adpc_control =
     PopupNotifications.show(wnd,
      'adpc',
      sPermissionPlr,
-     null,
+     'adpc-notification-icon',
      {
       label: sDetails,
       accessKey: kDetails,
