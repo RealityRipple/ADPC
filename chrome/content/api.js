@@ -434,7 +434,7 @@ var adpc_api =
     let wnd = bri.contentWindow;
     if (wnd !== wnd.top)
      continue;
-    if (bri.currentURI.asciiHost !== host)
+    if (adpc_api.baseDomain(bri.currentURI.asciiHost) !== host)
      continue;
     if (wnd.navigator.wrappedJSObject.dataProtectionControl === undefined)
      continue;
